@@ -1,0 +1,22 @@
+Salut Bertrand,
+
+Comme tu le sais, nous sommes en train de mettre en place l’infrastructure pour la sortie prochaine de notre JNF sur https://trois-pains-zero.quatre-qu.art/.
+Nous avons choisi de protéger notre interface d’administration en utilisant un chiffrement multi-signature 4 parmi 4 en utilisant différents dispositifs pour stocker les clés privées.
+
+
+Pour rappel tu trouveras les fichiers nécessaire dans la sauvegarde :
+
+- le script que j'ai utilisé pour participer au protocole de multi-signature : musig2_player.py. J'ai aussi inclus le fichier de journalisation de signatures que nous avions fait jeudi dernier ainsi que nos 4 clés publiques.
+
+- un porte-monnaie numérique dont tu possèdes le mot de passe: seedlocker.py
+
+- un équipement physique, disponible ici device.quatre-qu.art:8080, je crois que c'est Charly qui a le mot de passe. Si tu veux tester sur ton propre équipement tu trouveras la mise à jour de l'interface utilisateur sur le serveur de sauvegarde avec la libc utilisée. Nous avons mis en place des limitations, une à base de preuve de travail, nous t'avons aussi fourni le script de résolution (pow_solver.py) ainsi qu'un mot de passe "fudmH/MGzgUM7Zx3k6xMuvThTXh+ULf1".
+Le mot de passe n'est pas celui de l'équipement mais celui pour la protection. 
+
+- Pour le dernier équipement, Daniel a perdu son code pin.
+Nous avons essayé d’extraire les informations en attaquant la mémoire sécurisée avec des injections de fautes mais sans succès 😒.
+Pour information la mémoire sécurisée prends un masque en argument et utilise la valeur stockée XORé avec le masque. Les mesures qu'on a faites pendant l'expérience sont stockées dans data.h5. Il est trop volumineux pour la sauvegarde mais tu peux le récupérer à cette adresse : https://trois-pains-zero.quatre-qu.art/data_34718ec031bbb6e094075a0c7da32bc5056a57ff082c206e6b70fcc864df09e9.h5.
+Peut-être que tu connais quelqu’un qui pourrait nous aider à retrouver les informations ?
+
+
+Bon courage!

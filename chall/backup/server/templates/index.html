@@ -1,0 +1,133 @@
+{% extends "base.html" %}
+{% block title %}Index{% endblock %}
+{% block head %}
+  {{ super() }}
+{% endblock %}
+{% block content %}
+<main class="d-flex flex-nowrap">
+	<div class="flex-column p-3 bg-light" style="width: 300px;">
+		<a href="/" class="d-flex align-items-center mb-3 mb-md-0 me-md-auto link-dark text-decoration-none">
+		  <span class="fs-4">Menu</span>
+		</a>
+		<hr>
+		<ul class="nav nav-pills flex-column mb-auto">
+		  <li class="nav-item">
+			<a href="#presentation" class="nav-link active" aria-current="page">
+			  Home
+			</a>
+		  </li>
+		  <li>
+			<a href="#nouveautes" class="nav-link link-dark">
+			  Nouveautés
+			</a>
+		  </li>
+		  <li>
+			<a href="#produits" class="nav-link link-dark">
+			  Produits
+			</a>
+		  </li>
+		  <li>
+			<a href="/achat" class="nav-link link-dark">
+			  Acheter un JNF
+			</a>
+		  </li>
+		</ul>
+	</div>
+	<main bg-light>
+		
+		<h1 class="display-5 px-3 py-3" id="presentation">Présentation</h1>
+		<div class="position-relative overflow-hidden p-3 p-md-5 m-md-3 text-center bg-light">
+		  <div class="col-md-10 p-lg-5 mx-auto my-5">
+			<h1 class="display-4 fw-normal">Welcome</h1>	
+			<p class="lead fw-normal">
+				</br></br>
+				Bienvenue sur le site de votre boulangerie bretonne préférée Trois Pains Zéro (TPZ). </br>
+
+				Vous trouverez ici les nouveautés de notre boulangerie. </br></br>
+				
+				Nous espérons vous retrouver vite en magasin.
+			</p>
+		  </div>
+		</div>
+		
+		<h1 class="display-5 px-3 py-3" id="nouveautes">Nouveautés</h1>
+		<div class="position-relative overflow-hidden p-3 p-md-5 m-md-3 text-center bg-light">
+		  <div class="col-md-10 p-lg-5 mx-auto my-5">
+			<h1 class="display-4 fw-normal"></h1>
+			<p class="lead fw-normal">
+				Salud deoc’h !<br><br>
+
+				Votre nouvelle boulangerie Trois Pains Zéro a décidé d’innover afin d'éviter les files d’attente et vous permettre de déguster notre recette phare : le fameux quatre-quarts.</br> </br>
+
+				A partir du 1er Juillet 2023 il vous suffira d’acquérir un JNF (Jeton Non-Fongible) de notre collection <a href="https://testnets.opensea.io/assets/goerli/0x43F99c5517928be62935A1d7714408fae90d1896/1">OpenSea</a>  et de le présenter en magasin pour recevoir votre précieux gateau. <br> <br>
+
+				La page d’achat sera bientôt disponible pour tous nos clients et nous espérons vous voir bientôt en magasin. <br> <br>
+
+				Nous espérons vous voir bientôt en magasin avec votre JNF. <br><br>
+
+				Délicieusement vôtre,<br><br>
+				Votre boulangerie Trois Pains Zéro
+		  </div>
+		  <div class="product-device shadow-sm d-none d-md-block"></div>
+		  <div class="product-device product-device-2 shadow-sm d-none d-md-block"></div>
+		</div>
+		
+		<h1 class="display-5 px-3 py-3" id="produits">Produits</h1>
+		<div class="d-md-flex flex-md-equal w-100 my-md-3 ps-md-3">
+		  <div class="div-1 me-md-3 pt-3 px-3 pt-md-5 px-md-5 text-center overflow-hidden">
+			<div class="my-3 py-3">
+			  <h2 class="display-5">Quatre Quarts</h2>
+			  <p class="lead">Notre fameux quatre quarts aux pommes</p>
+			</div>
+			<img style="width: 80%; height: 300px; border-radius: 21px 21px 0 0;" src="../static/quatrequart.jpeg">
+
+		  </div>
+		  <div class="bg-light me-md-3 pt-3 px-3 pt-md-5 px-md-5 text-center overflow-hidden">
+			<div class="my-3 p-3">
+			  <h2 class="display-5">Kouign amann</h2>
+			  <p class="lead">Au beurre de nos éleveurs</p>
+			</div>
+			<img style="width: 80%; height: 300px; border-radius: 21px 21px 0 0;" src="../static/kouign.jpeg">
+
+		  </div>
+		  <div class="div-1 me-md-3 pt-3 px-3 pt-md-5 px-md-5 text-center overflow-hidden">
+			<div class="my-3 py-3">
+			  <h2 class="display-5">Notre Farz Fourn</h2>
+			  <p class="lead">Pas le bâtiment guidant les bâteaux la nuit</p>
+			</div>
+			<img style="width: 80%; height: 300px; border-radius: 21px 21px 0 0;" src="../static/farbreton.jpeg">
+
+		  </div>
+		</div>
+
+		<div class="d-md-flex flex-md-equal w-100 my-md-3 ps-md-3">
+			<div class="me-md-3 pt-3 px-3 pt-md-5 px-md-5 text-center overflow-hidden">
+			  <div class="my-3 py-3">
+				<h2 class="display-5">Nos palets bretons</h2>
+				<p class="lead">Le biscuit qui a inspiré le hockey</p>
+			  </div>
+			  <img style="width: 80%; height: 300px; border-radius: 21px 21px 0 0;" src="../static/palet.jpeg">
+
+			</div>
+			<div class="div-1 me-md-3 pt-3 px-3 pt-md-5 px-md-5 text-center overflow-hidden">
+			  <div class="my-3 p-3">
+				<h2 class="display-5">Meringué rennais</h2>
+				<p class="lead">Une tarte au pomme meringuée, mais de Rennes 🤷</p>
+			  </div>
+			  <img style="width: 80%; height: 300px; border-radius: 21px 21px 0 0;" src="../static/meringue.jpeg">
+			</div>
+			<div class="me-md-3 pt-3 px-3 pt-md-5 px-md-5 text-center overflow-hidden">
+			  <div class="my-3 py-3">
+				<h2 class="display-5">Notre Crème brûlée</h2>
+				<p class="lead">Au caramel au beurre salée</p>
+			  </div>
+			  <img style="width: 80%; height: 300px; border-radius: 21px 21px 0 0;" src="../static/creme.jpeg">
+			</div>
+		  </div>
+
+	
+	 
+	  </main>
+</main>
+ 
+{% endblock %}

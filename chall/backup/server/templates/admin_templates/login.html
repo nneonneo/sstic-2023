@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% from 'bootstrap5/form.html' import render_form, render_field, render_form_row %}
+
+{% block title %}Login Page{% endblock %}
+{% block head %}
+  {{ super() }}
+  <style type="text/css">
+    .important { color: #336699; }
+  </style>
+{% endblock %}
+{% block content %}
+    <h1 class="display-5 px-3 py-3"> Zone d'administration </h1>
+
+    <div class="position-relative overflow-hidden p-3 p-md-5 m-md-3 bg-light">
+		  <div class="p-lg-2 mx-auto my-2">
+			<p>
+        La page à laquelle vous voulez accéder n'est pas encore ouverte au public et seul un administrateur ou nos super clients peuvent y accéder.
+        <br>
+
+        Pour vous authentifier en tant qu'administrateur ou super client, faites signer aux quatre membres le message suivant :
+      <pre>{{ tbs }}</pre>
+
+      <p> Pour rappel, la clé publique aggrégé MuSig2 des quatre membres est: </p>
+
+      <pre>{{ "({:x},{:x})".format(pubkey[0], pubkey[1]) }}</pre>
+
+      <h2 class="display-4"> Signature (hexadecimal):</h2>
+        <form action="/admin/login" method="post">
+          <label for="Rx">Rx :</label><br><br>
+          <input type="text" id="Rx" name="Rx"><br><br>
+          <label for="Ry">Ry :</label><br><br>
+          <input type="text" id="Ry" name="Ry"><br><br>
+          <label for="s"> s : </label><br><br>
+          <input type="text" id="s" name="s"><br><br>
+          <input class="btn btn-outline-secondary btn-lg" type="submit" value="Log in">
+        </form>
+		  </div>
+		</div>
+
+    
+
+{% endblock %}

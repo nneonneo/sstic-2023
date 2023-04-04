@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block title %}JFT pages{% endblock %}
+{% block head %}
+  {{ super() }}
+  <style type="text/css">
+    .important { color: #336699; }
+  </style>
+{% endblock %}
+{% block content %}
+    <h1> Page d'achat du JNF </h1>
+
+    Cette page ne devrait pas être accessible. Si vous êtes arrivé là, merci
+    de contacter le pâtissier en chef sur son adresse e-mail. <br><br>
+
+    <br>
+
+    Afin d'éviter les spams, vous devez résoudre un captcha pour obtenir
+    l'adresse e-mail: <a href="/achat/captcha">CAPTCHA</a>.
+{% endblock %}

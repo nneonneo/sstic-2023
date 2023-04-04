@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% from 'bootstrap5/form.html' import render_form, render_field, render_form_row %}
+
+{% block title %}Super Client Redeem{% endblock %}
+{% block head %}
+  {{ super() }}
+  <style type="text/css">
+    .important { color: #336699; }
+  </style>
+{% endblock %}
+{% block content %}
+  
+    <h1 class="display-5 px-3 py-3"> Interface d'Achat </h1>
+
+    <div class="position-relative overflow-hidden p-3 p-md-5 m-md-3 bg-light">
+		  <div class="p-lg-2 mx-auto my-2">
+        <h2> Bienvenue super client </h2>
+        <p>Pour ouvrir une fenêtre d'achat du JNF grâce au coupon d'accès que vous avez reçu, rentrez ses informations ici :</p>
+
+        <h2>Coupon (hexadecimal):</h2>
+        <form action="/achat/redeem" method="post">
+            <label for="id">Identifiant du coupon :</label>
+            <input type="text" id="id" name="id"><br><br>
+
+            <label for="code"> Code :</label>
+            <input type="text" id="code" name="code"><br><br>
+
+            <label for="a"> a :</label>
+            <input type="text" id="a" name="a"><br><br>
+
+            <label for="b"> b :</label>
+            <input type="text" id="b" name="b"><br><br>
+
+            <input class="btn btn-outline-secondary btn-lg"  type="submit" value="Super log in">
+        </form>
+      </div>
+		</div>
+{% endblock %}
