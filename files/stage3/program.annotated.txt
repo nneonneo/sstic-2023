@@ -1,0 +1,991 @@
+___________________________________________________________________________
+
+%builtins pedersen range_check
+___________________________________________________________________________
+struct __main__._validate.Args:
+	member id_hash : felt
+	member code : felt*
+end
+
+struct __main__._validate.ImplicitArgs:
+	member syscall_ptr : felt*
+	member pedersen_ptr : starkware.cairo.common.cairo_builtins.HashBuiltin*
+	member range_check_ptr : felt
+end
+
+struct __main__.assert_only_once.Args:
+	member id : felt
+end
+
+struct __main__.assert_only_once.ImplicitArgs:
+	member syscall_ptr : felt*
+	member pedersen_ptr : starkware.cairo.common.cairo_builtins.HashBuiltin*
+	member range_check_ptr : felt
+end
+
+struct __main__.assert_only_owner.Args:
+end
+
+struct __main__.assert_only_owner.ImplicitArgs:
+	member syscall_ptr : felt*
+	member pedersen_ptr : starkware.cairo.common.cairo_builtins.HashBuiltin*
+	member range_check_ptr : felt
+end
+
+struct __main__.constructor.Args:
+	member _owner : felt
+	member _nonce : felt
+end
+
+struct __main__.constructor.ImplicitArgs:
+	member syscall_ptr : felt*
+	member pedersen_ptr : starkware.cairo.common.cairo_builtins.HashBuiltin*
+	member range_check_ptr : felt
+end
+
+struct __main__.first.Args:
+	member curr : felt
+	member in_len : felt
+	member in : felt*
+end
+
+struct __main__.first.ImplicitArgs:
+	member pedersen_ptr : starkware.cairo.common.cairo_builtins.HashBuiltin*
+end
+
+struct __main__.get_owner.Args:
+end
+
+struct __main__.get_owner.ImplicitArgs:
+	member syscall_ptr : felt*
+	member pedersen_ptr : starkware.cairo.common.cairo_builtins.HashBuiltin*
+	member range_check_ptr : felt
+end
+
+struct __main__.ids.Args:
+end
+
+struct __main__.ids.ImplicitArgs:
+end
+
+struct __main__.ids.addr.Args:
+	member pubkey : felt
+end
+
+struct __main__.ids.addr.ImplicitArgs:
+	member pedersen_ptr : starkware.cairo.common.cairo_builtins.HashBuiltin*
+	member range_check_ptr : felt
+end
+
+struct __main__.ids.read.Args:
+	member pubkey : felt
+end
+
+struct __main__.ids.read.ImplicitArgs:
+	member syscall_ptr : felt*
+	member pedersen_ptr : starkware.cairo.common.cairo_builtins.HashBuiltin*
+	member range_check_ptr : felt
+end
+
+struct __main__.ids.write.Args:
+	member pubkey : felt
+	member value : felt
+end
+
+struct __main__.ids.write.ImplicitArgs:
+	member syscall_ptr : felt*
+	member pedersen_ptr : starkware.cairo.common.cairo_builtins.HashBuiltin*
+	member range_check_ptr : felt
+end
+
+struct __main__.j.Args:
+	member id_hash : felt
+	member code : felt*
+end
+
+struct __main__.j.ImplicitArgs:
+end
+
+struct __main__.nonce.Args:
+end
+
+struct __main__.nonce.ImplicitArgs:
+end
+
+struct __main__.nonce.addr.Args:
+end
+
+struct __main__.nonce.addr.ImplicitArgs:
+	member pedersen_ptr : starkware.cairo.common.cairo_builtins.HashBuiltin*
+	member range_check_ptr : felt
+end
+
+struct __main__.nonce.read.Args:
+end
+
+struct __main__.nonce.read.ImplicitArgs:
+	member syscall_ptr : felt*
+	member pedersen_ptr : starkware.cairo.common.cairo_builtins.HashBuiltin*
+	member range_check_ptr : felt
+end
+
+struct __main__.nonce.write.Args:
+	member value : felt
+end
+
+struct __main__.nonce.write.ImplicitArgs:
+	member syscall_ptr : felt*
+	member pedersen_ptr : starkware.cairo.common.cairo_builtins.HashBuiltin*
+	member range_check_ptr : felt
+end
+
+struct __main__.owner.Args:
+end
+
+struct __main__.owner.ImplicitArgs:
+end
+
+struct __main__.owner.addr.Args:
+end
+
+struct __main__.owner.addr.ImplicitArgs:
+	member pedersen_ptr : starkware.cairo.common.cairo_builtins.HashBuiltin*
+	member range_check_ptr : felt
+end
+
+struct __main__.owner.read.Args:
+end
+
+struct __main__.owner.read.ImplicitArgs:
+	member syscall_ptr : felt*
+	member pedersen_ptr : starkware.cairo.common.cairo_builtins.HashBuiltin*
+	member range_check_ptr : felt
+end
+
+struct __main__.owner.write.Args:
+	member value : felt
+end
+
+struct __main__.owner.write.ImplicitArgs:
+	member syscall_ptr : felt*
+	member pedersen_ptr : starkware.cairo.common.cairo_builtins.HashBuiltin*
+	member range_check_ptr : felt
+end
+
+struct __main__.second.Args:
+	member h : felt
+	member a : felt
+	member b : felt
+end
+
+struct __main__.second.ImplicitArgs:
+	member range_check_ptr : felt
+end
+
+struct __main__.validate.Args:
+	member id : felt
+	member code_len : felt
+	member code : felt*
+	member a : felt
+	member b : felt
+end
+
+struct __main__.validate.ImplicitArgs:
+	member syscall_ptr : felt*
+	member pedersen_ptr : starkware.cairo.common.cairo_builtins.HashBuiltin*
+	member range_check_ptr : felt
+end
+
+struct __wrappers__.constructor.Args:
+end
+
+struct __wrappers__.constructor.ImplicitArgs:
+end
+
+struct __wrappers__.get_owner.Args:
+end
+
+struct __wrappers__.get_owner.ImplicitArgs:
+end
+
+struct __wrappers__.get_owner_encode_return.Args:
+	member ret_value : (account: felt)
+	member range_check_ptr : felt
+end
+
+struct __wrappers__.get_owner_encode_return.ImplicitArgs:
+end
+
+struct __wrappers__.validate.Args:
+end
+
+struct __wrappers__.validate.ImplicitArgs:
+end
+
+struct starkware.cairo.common.cairo_builtins.BitwiseBuiltin:
+	member x : felt
+	member y : felt
+	member x_and_y : felt
+	member x_xor_y : felt
+	member x_or_y : felt
+end
+
+struct starkware.cairo.common.cairo_builtins.EcOpBuiltin:
+	member p : starkware.cairo.common.ec_point.EcPoint
+	member q : starkware.cairo.common.ec_point.EcPoint
+	member m : felt
+	member r : starkware.cairo.common.ec_point.EcPoint
+end
+
+struct starkware.cairo.common.cairo_builtins.HashBuiltin:
+	member x : felt
+	member y : felt
+	member result : felt
+end
+
+struct starkware.cairo.common.cairo_builtins.KeccakBuiltin:
+	member input : starkware.cairo.common.keccak_state.KeccakBuiltinState
+	member output : starkware.cairo.common.keccak_state.KeccakBuiltinState
+end
+
+struct starkware.cairo.common.cairo_builtins.SignatureBuiltin:
+	member pub_key : felt
+	member message : felt
+end
+
+struct starkware.cairo.common.dict_access.DictAccess:
+	member key : felt
+	member prev_value : felt
+	member new_value : felt
+end
+
+struct starkware.cairo.common.ec_point.EcPoint:
+	member x : felt
+	member y : felt
+end
+
+struct starkware.cairo.common.hash.hash2.Args:
+	member x : felt
+	member y : felt
+end
+
+struct starkware.cairo.common.hash.hash2.ImplicitArgs:
+	member hash_ptr : starkware.cairo.common.cairo_builtins.HashBuiltin*
+end
+
+struct starkware.cairo.common.keccak_state.KeccakBuiltinState:
+	member s0 : felt
+	member s1 : felt
+	member s2 : felt
+	member s3 : felt
+	member s4 : felt
+	member s5 : felt
+	member s6 : felt
+	member s7 : felt
+end
+
+struct starkware.cairo.common.math.assert_250_bit.Args:
+	member value : felt
+end
+
+struct starkware.cairo.common.math.assert_250_bit.ImplicitArgs:
+	member range_check_ptr : felt
+end
+
+struct starkware.cairo.lang.compiler.lib.registers.get_ap.Args:
+end
+
+struct starkware.cairo.lang.compiler.lib.registers.get_ap.ImplicitArgs:
+end
+
+struct starkware.cairo.lang.compiler.lib.registers.get_fp_and_pc.Args:
+end
+
+struct starkware.cairo.lang.compiler.lib.registers.get_fp_and_pc.ImplicitArgs:
+end
+
+struct starkware.starknet.common.storage.normalize_address.Args:
+	member addr : felt
+end
+
+struct starkware.starknet.common.storage.normalize_address.ImplicitArgs:
+	member range_check_ptr : felt
+end
+
+struct starkware.starknet.common.syscalls.CallContract:
+	member request : starkware.starknet.common.syscalls.CallContractRequest
+	member response : starkware.starknet.common.syscalls.CallContractResponse
+end
+
+struct starkware.starknet.common.syscalls.CallContractRequest:
+	member selector : felt
+	member contract_address : felt
+	member function_selector : felt
+	member calldata_size : felt
+	member calldata : felt*
+end
+
+struct starkware.starknet.common.syscalls.CallContractResponse:
+	member retdata_size : felt
+	member retdata : felt*
+end
+
+struct starkware.starknet.common.syscalls.Deploy:
+	member request : starkware.starknet.common.syscalls.DeployRequest
+	member response : starkware.starknet.common.syscalls.DeployResponse
+end
+
+struct starkware.starknet.common.syscalls.DeployRequest:
+	member selector : felt
+	member class_hash : felt
+	member contract_address_salt : felt
+	member constructor_calldata_size : felt
+	member constructor_calldata : felt*
+	member deploy_from_zero : felt
+end
+
+struct starkware.starknet.common.syscalls.DeployResponse:
+	member contract_address : felt
+	member constructor_retdata_size : felt
+	member constructor_retdata : felt*
+end
+
+struct starkware.starknet.common.syscalls.EmitEvent:
+	member selector : felt
+	member keys_len : felt
+	member keys : felt*
+	member data_len : felt
+	member data : felt*
+end
+
+struct starkware.starknet.common.syscalls.GetBlockNumber:
+	member request : starkware.starknet.common.syscalls.GetBlockNumberRequest
+	member response : starkware.starknet.common.syscalls.GetBlockNumberResponse
+end
+
+struct starkware.starknet.common.syscalls.GetBlockNumberRequest:
+	member selector : felt
+end
+
+struct starkware.starknet.common.syscalls.GetBlockNumberResponse:
+	member block_number : felt
+end
+
+struct starkware.starknet.common.syscalls.GetBlockTimestamp:
+	member request : starkware.starknet.common.syscalls.GetBlockTimestampRequest
+	member response : starkware.starknet.common.syscalls.GetBlockTimestampResponse
+end
+
+struct starkware.starknet.common.syscalls.GetBlockTimestampRequest:
+	member selector : felt
+end
+
+struct starkware.starknet.common.syscalls.GetBlockTimestampResponse:
+	member block_timestamp : felt
+end
+
+struct starkware.starknet.common.syscalls.GetCallerAddress:
+	member request : starkware.starknet.common.syscalls.GetCallerAddressRequest
+	member response : starkware.starknet.common.syscalls.GetCallerAddressResponse
+end
+
+struct starkware.starknet.common.syscalls.GetCallerAddressRequest:
+	member selector : felt
+end
+
+struct starkware.starknet.common.syscalls.GetCallerAddressResponse:
+	member caller_address : felt
+end
+
+struct starkware.starknet.common.syscalls.GetContractAddress:
+	member request : starkware.starknet.common.syscalls.GetContractAddressRequest
+	member response : starkware.starknet.common.syscalls.GetContractAddressResponse
+end
+
+struct starkware.starknet.common.syscalls.GetContractAddressRequest:
+	member selector : felt
+end
+
+struct starkware.starknet.common.syscalls.GetContractAddressResponse:
+	member contract_address : felt
+end
+
+struct starkware.starknet.common.syscalls.GetSequencerAddress:
+	member request : starkware.starknet.common.syscalls.GetSequencerAddressRequest
+	member response : starkware.starknet.common.syscalls.GetSequencerAddressResponse
+end
+
+struct starkware.starknet.common.syscalls.GetSequencerAddressRequest:
+	member selector : felt
+end
+
+struct starkware.starknet.common.syscalls.GetSequencerAddressResponse:
+	member sequencer_address : felt
+end
+
+struct starkware.starknet.common.syscalls.GetTxInfo:
+	member request : starkware.starknet.common.syscalls.GetTxInfoRequest
+	member response : starkware.starknet.common.syscalls.GetTxInfoResponse
+end
+
+struct starkware.starknet.common.syscalls.GetTxInfoRequest:
+	member selector : felt
+end
+
+struct starkware.starknet.common.syscalls.GetTxInfoResponse:
+	member tx_info : starkware.starknet.common.syscalls.TxInfo*
+end
+
+struct starkware.starknet.common.syscalls.GetTxSignature:
+	member request : starkware.starknet.common.syscalls.GetTxSignatureRequest
+	member response : starkware.starknet.common.syscalls.GetTxSignatureResponse
+end
+
+struct starkware.starknet.common.syscalls.GetTxSignatureRequest:
+	member selector : felt
+end
+
+struct starkware.starknet.common.syscalls.GetTxSignatureResponse:
+	member signature_len : felt
+	member signature : felt*
+end
+
+struct starkware.starknet.common.syscalls.LibraryCall:
+	member request : starkware.starknet.common.syscalls.LibraryCallRequest
+	member response : starkware.starknet.common.syscalls.CallContractResponse
+end
+
+struct starkware.starknet.common.syscalls.LibraryCallRequest:
+	member selector : felt
+	member class_hash : felt
+	member function_selector : felt
+	member calldata_size : felt
+	member calldata : felt*
+end
+
+struct starkware.starknet.common.syscalls.SendMessageToL1SysCall:
+	member selector : felt
+	member to_address : felt
+	member payload_size : felt
+	member payload_ptr : felt*
+end
+
+struct starkware.starknet.common.syscalls.StorageRead:
+	member request : starkware.starknet.common.syscalls.StorageReadRequest
+	member response : starkware.starknet.common.syscalls.StorageReadResponse
+end
+
+struct starkware.starknet.common.syscalls.StorageReadRequest:
+	member selector : felt
+	member address : felt
+end
+
+struct starkware.starknet.common.syscalls.StorageReadResponse:
+	member value : felt
+end
+
+struct starkware.starknet.common.syscalls.StorageWrite:
+	member selector : felt
+	member address : felt
+	member value : felt
+end
+
+struct starkware.starknet.common.syscalls.TxInfo:
+	member version : felt
+	member account_contract_address : felt
+	member max_fee : felt
+	member signature_len : felt
+	member signature : felt*
+	member transaction_hash : felt
+	member chain_id : felt
+	member nonce : felt
+end
+
+struct starkware.starknet.common.syscalls.get_caller_address.Args:
+end
+
+struct starkware.starknet.common.syscalls.get_caller_address.ImplicitArgs:
+	member syscall_ptr : felt*
+end
+
+struct starkware.starknet.common.syscalls.storage_read.Args:
+	member address : felt
+end
+
+struct starkware.starknet.common.syscalls.storage_read.ImplicitArgs:
+	member syscall_ptr : felt*
+end
+
+struct starkware.starknet.common.syscalls.storage_write.Args:
+	member address : felt
+	member value : felt
+end
+
+struct starkware.starknet.common.syscalls.storage_write.ImplicitArgs:
+	member syscall_ptr : felt*
+end
+
+
+___________________________________________________________________________
+
+// Function 0
+func starkware.cairo.common.hash.hash2{hash_ptr : starkware.cairo.common.cairo_builtins.HashBuiltin*}(x : felt, y : felt) -> (result : felt)
+
+offset 0:          ASSERT_EQ           [FP-4], [[FP-5]]    
+offset 1:          ASSERT_EQ           [FP-3], [[FP-5]+1]  
+offset 2:          PUSH                [FP-5] + 3    
+offset 4:          PUSH                [[FP-5]+2]    
+offset 5:          RET                 
+
+// Function 1
+func starkware.cairo.lang.compiler.lib.registers.get_fp_and_pc{}() -> (fp_val : felt*, pc_val : felt*)
+
+offset 6:          RET                 
+
+// Function 2
+@known_ap_change func starkware.cairo.lang.compiler.lib.registers.get_ap{}() -> (ap_val : felt*)
+
+offset 7:          CALL                6                   # starkware.cairo.lang.compiler.lib.registers.get_fp_and_pc
+offset 9:          PUSH                [AP-2] + -2   
+offset 11:         RET                 
+
+// Function 3
+@known_ap_change func starkware.cairo.common.math.assert_250_bit{range_check_ptr : felt}(value : felt)
+
+offset 12:         PUSH                0x3ffffffffffffffffffffffffffffff# from starkware.cairo.common.math_utils import as_int
+
+# Correctness check.
+value = as_int(ids.value, PRIME) % PRIME
+assert value < ids.UPPER_BOUND, f'{value} is outside of the range [0, 2**250).'
+
+# Calculation for the assertion.
+ids.high, ids.low = divmod(ids.value, ids.SHIFT)
+offset 14:         PUSH                [[FP-4]+1]    
+offset 15:         ASSERT_EQ           [AP-2], [AP] + [AP-1]
+offset 15:         ADD                 AP, 1               
+offset 16:         ASSERT_EQ           [AP-1], [[FP-4]+2]  
+offset 17:         PUSH                [[FP-4]+1]    
+offset 18:         PUSH                [AP-1] * 0x100000000000000000000000000000000
+offset 20:         PUSH                [[FP-4]]      
+offset 21:         ASSERT_EQ           [FP-3], [AP-2] + [AP-1]
+offset 22:         PUSH                [FP-4] + 3    
+offset 24:         RET                 
+
+// Function 4
+@known_ap_change func starkware.starknet.common.storage.normalize_address{range_check_ptr : felt}(addr : felt) -> (res : felt)
+
+offset 25:         NOP                 
+offset 27:         JNZ                 16                  # JMP 43             # # Verify the assumptions on the relationship between 2**250, ADDR_BOUND and PRIME.
+ADDR_BOUND = ids.ADDR_BOUND % PRIME
+assert (2**250 < ADDR_BOUND <= 2**251) and (2 * 2**250 < PRIME) and (
+        ADDR_BOUND * 2 > PRIME), \
+    'normalize_address() cannot be used with the current constants.'
+ids.is_small = 1 if ids.addr < ADDR_BOUND else 0
+offset 29:         PUSH                [FP-4]        
+offset 30:         PUSH                [FP-3] + 0x11000000000000000000000000000000000000000000000101
+offset 32:         CALL                12                  # starkware.cairo.common.math.assert_250_bit
+offset 34:         PUSH                -1                  # -0x1
+offset 36:         PUSH                [AP-2]        
+offset 37:         ASSERT_EQ           [AP-2], [AP] + [FP-3]
+offset 37:         ADD                 AP, 1               
+offset 38:         CALL                12                  # starkware.cairo.common.math.assert_250_bit
+offset 40:         PUSH                [FP-3] + 0x11000000000000000000000000000000000000000000000101
+offset 42:         RET                 
+offset 43:         NOP                 
+offset 45:         JNZ                 12                  # JMP 57             # ids.is_250 = 1 if ids.addr < 2**250 else 0
+offset 47:         NOP                 
+offset 49:         PUSH                0x7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffeff
+offset 51:         PUSH                [FP-4]        
+offset 52:         ASSERT_EQ           [AP-2], [AP] + [FP-3]
+offset 52:         ADD                 AP, 1               
+offset 53:         CALL                12                  # starkware.cairo.common.math.assert_250_bit
+offset 55:         JUMP_REL            8                   # JMP 63            
+offset 57:         NOP                 
+offset 59:         PUSH                [FP-4]        
+offset 60:         PUSH                [FP-3]        
+offset 61:         CALL                12                  # starkware.cairo.common.math.assert_250_bit
+offset 63:         PUSH                [FP-3]        
+offset 64:         RET                 
+
+// Function 5
+func starkware.starknet.common.syscalls.get_caller_address{syscall_ptr : felt*}() -> (caller_address : felt)
+
+offset 65:         PUSH                0x47657443616c6c657241646472657373
+offset 67:         ASSERT_EQ           [AP-1], [[FP-3]]    
+offset 68:         PUSH                [FP-3] + 2          # syscall_handler.get_caller_address(segments=segments, syscall_ptr=ids.syscall_ptr)
+offset 70:         PUSH                [[FP-3]+1]    
+offset 71:         RET                 
+
+// Function 6
+func starkware.starknet.common.syscalls.storage_read{syscall_ptr : felt*}(address : felt) -> (value : felt)
+
+offset 72:         PUSH                0x53746f7261676552656164
+offset 74:         ASSERT_EQ           [AP-1], [[FP-4]]    
+offset 75:         ASSERT_EQ           [FP-3], [[FP-4]+1]  
+offset 76:         PUSH                [FP-4] + 3          # syscall_handler.storage_read(segments=segments, syscall_ptr=ids.syscall_ptr)
+offset 78:         PUSH                [[FP-4]+2]    
+offset 79:         RET                 
+
+// Function 7
+func starkware.starknet.common.syscalls.storage_write{syscall_ptr : felt*}(address : felt, value : felt)
+
+offset 80:         PUSH                0x53746f726167655772697465
+offset 82:         ASSERT_EQ           [AP-1], [[FP-5]]    
+offset 83:         ASSERT_EQ           [FP-4], [[FP-5]+1]  
+offset 84:         ASSERT_EQ           [FP-3], [[FP-5]+2]  
+offset 85:         PUSH                [FP-5] + 3          # syscall_handler.storage_write(segments=segments, syscall_ptr=ids.syscall_ptr)
+offset 87:         RET                 
+
+// Function 8
+func __main__.ids.addr{pedersen_ptr : starkware.cairo.common.cairo_builtins.HashBuiltin*, range_check_ptr : felt}(pubkey : felt) -> (res : felt)
+
+offset 88:         PUSH                [FP-5]        
+offset 89:         PUSH                0x15a59b5fd505b82b3aff0b04f5cdd2ceb73c4478a788ac7a91d4ae213ec3e04
+offset 91:         PUSH                [FP-3]        
+offset 92:         CALL                0                   # starkware.cairo.common.hash.hash2
+offset 94:         PUSH                [FP-4]        
+offset 95:         PUSH                [AP-2]        
+offset 96:         CALL                25                  # starkware.starknet.common.storage.normalize_address
+offset 98:         PUSH                [AP-31]       
+offset 99:         PUSH                [AP-3]        
+offset 100:        PUSH                [AP-3]        
+offset 101:        RET                 
+
+// Function 9
+func __main__.ids.read{syscall_ptr : felt*, pedersen_ptr : starkware.cairo.common.cairo_builtins.HashBuiltin*, range_check_ptr : felt}(pubkey : felt) -> (res : felt)
+
+offset 102:        PUSH                [FP-5]        
+offset 103:        PUSH                [FP-4]        
+offset 104:        PUSH                [FP-3]        
+offset 105:        CALL                88                  # __main__.ids.addr 
+offset 107:        PUSH                [FP-6]        
+offset 108:        PUSH                [AP-2]        
+offset 109:        CALL                72                  # starkware.starknet.common.syscalls.storage_read
+offset 111:        PUSH                [AP-2]        
+offset 112:        PUSH                [AP-11]       
+offset 113:        PUSH                [AP-11]       
+offset 114:        PUSH                [AP-4]        
+offset 115:        RET                 
+
+// Function 10
+func __main__.ids.write{syscall_ptr : felt*, pedersen_ptr : starkware.cairo.common.cairo_builtins.HashBuiltin*, range_check_ptr : felt}(pubkey : felt, value : felt)
+
+offset 116:        PUSH                [FP-6]        
+offset 117:        PUSH                [FP-5]        
+offset 118:        PUSH                [FP-4]        
+offset 119:        CALL                88                  # __main__.ids.addr 
+offset 121:        PUSH                [FP-7]        
+offset 122:        PUSH                [AP-2]        
+offset 123:        PUSH                [FP-3]        
+offset 124:        CALL                80                  # starkware.starknet.common.syscalls.storage_write
+offset 126:        PUSH                [AP-10]       
+offset 127:        PUSH                [AP-10]       
+offset 128:        RET                 
+
+// Function 11
+func __main__.owner.addr{pedersen_ptr : starkware.cairo.common.cairo_builtins.HashBuiltin*, range_check_ptr : felt}() -> (res : felt)
+
+offset 129:        PUSH                [FP-4]        
+offset 130:        PUSH                [FP-3]        
+offset 131:        PUSH                0x2016836a56b71f0d02689e69e326f4f4c1b9057164ef592671cf0d37c8040c0
+offset 133:        RET                 
+
+// Function 12
+func __main__.owner.read{syscall_ptr : felt*, pedersen_ptr : starkware.cairo.common.cairo_builtins.HashBuiltin*, range_check_ptr : felt}() -> (account : felt)
+
+offset 134:        PUSH                [FP-4]        
+offset 135:        PUSH                [FP-3]        
+offset 136:        CALL                129                 # __main__.owner.addr
+offset 138:        PUSH                [FP-5]        
+offset 139:        PUSH                [AP-2]        
+offset 140:        CALL                72                  # starkware.starknet.common.syscalls.storage_read
+offset 142:        PUSH                [AP-2]        
+offset 143:        PUSH                [AP-11]       
+offset 144:        PUSH                [AP-11]       
+offset 145:        PUSH                [AP-4]        
+offset 146:        RET                 
+
+// Function 13
+func __main__.owner.write{syscall_ptr : felt*, pedersen_ptr : starkware.cairo.common.cairo_builtins.HashBuiltin*, range_check_ptr : felt}(value : felt)
+
+offset 147:        PUSH                [FP-5]        
+offset 148:        PUSH                [FP-4]        
+offset 149:        CALL                129                 # __main__.owner.addr
+offset 151:        PUSH                [FP-6]        
+offset 152:        PUSH                [AP-2]        
+offset 153:        PUSH                [FP-3]        
+offset 154:        CALL                80                  # starkware.starknet.common.syscalls.storage_write
+offset 156:        PUSH                [AP-10]       
+offset 157:        PUSH                [AP-10]       
+offset 158:        RET                 
+
+// Function 14
+func __main__.nonce.addr{pedersen_ptr : starkware.cairo.common.cairo_builtins.HashBuiltin*, range_check_ptr : felt}() -> (res : felt)
+
+offset 159:        PUSH                [FP-4]        
+offset 160:        PUSH                [FP-3]        
+offset 161:        PUSH                0x2b1577440dd7bedf920cb6de2f9fc6bf7ba98c78c85a3fa1f8311aac95e1759
+offset 163:        RET                 
+
+// Function 15
+func __main__.nonce.read{syscall_ptr : felt*, pedersen_ptr : starkware.cairo.common.cairo_builtins.HashBuiltin*, range_check_ptr : felt}() -> (nonce : felt)
+
+offset 164:        PUSH                [FP-4]        
+offset 165:        PUSH                [FP-3]        
+offset 166:        CALL                159                 # __main__.nonce.addr
+offset 168:        PUSH                [FP-5]        
+offset 169:        PUSH                [AP-2]        
+offset 170:        CALL                72                  # starkware.starknet.common.syscalls.storage_read
+offset 172:        PUSH                [AP-2]        
+offset 173:        PUSH                [AP-11]       
+offset 174:        PUSH                [AP-11]       
+offset 175:        PUSH                [AP-4]        
+offset 176:        RET                 
+
+// Function 16
+func __main__.nonce.write{syscall_ptr : felt*, pedersen_ptr : starkware.cairo.common.cairo_builtins.HashBuiltin*, range_check_ptr : felt}(value : felt)
+
+offset 177:        PUSH                [FP-5]        
+offset 178:        PUSH                [FP-4]        
+offset 179:        CALL                159                 # __main__.nonce.addr
+offset 181:        PUSH                [FP-6]        
+offset 182:        PUSH                [AP-2]        
+offset 183:        PUSH                [FP-3]        
+offset 184:        CALL                80                  # starkware.starknet.common.syscalls.storage_write
+offset 186:        PUSH                [AP-10]       
+offset 187:        PUSH                [AP-10]       
+offset 188:        RET                 
+
+// Function 17
+@constructor func __main__.constructor{syscall_ptr : felt*, pedersen_ptr : starkware.cairo.common.cairo_builtins.HashBuiltin*, range_check_ptr : felt}(_owner : felt, _nonce : felt)
+
+offset 189:        PUSH                [FP-7]        
+offset 190:        PUSH                [FP-6]        
+offset 191:        PUSH                [FP-5]        
+offset 192:        PUSH                [FP-4]        
+offset 193:        CALL                147                 # __main__.owner.write
+offset 195:        PUSH                [FP-3]        
+offset 196:        CALL                177                 # __main__.nonce.write
+offset 198:        RET                 
+
+// Function 18
+@constructor func __wrappers__.constructor{}() -> (syscall_ptr : felt*, pedersen_ptr : starkware.cairo.common.cairo_builtins.HashBuiltin*, range_check_ptr : felt, size : felt, retdata : felt*)
+
+offset 199:        PUSH                [FP-3] + 2    
+offset 201:        ASSERT_EQ           [AP-1], [FP-4] + [FP-3]
+offset 202:        PUSH                [[FP-5]]      
+offset 203:        PUSH                [[FP-5]+1]    
+offset 204:        PUSH                [[FP-5]+2]    
+offset 205:        PUSH                [[FP-3]]      
+offset 206:        PUSH                [[FP-3]+1]    
+offset 207:        CALL                189                 # __main__.constructor
+offset 209:        NOP                  # memory[ap] = segments.add()
+offset 211:        PUSH                [AP-4]        
+offset 212:        PUSH                [AP-4]        
+offset 213:        PUSH                [AP-4]        
+offset 214:        PUSH                0                   # 0x0
+offset 216:        PUSH                [AP-5]        
+offset 217:        RET                 
+
+// Function 19
+func __main__.j{}(id_hash : felt, code : felt*)
+
+offset 218:        NOP                 
+offset 220:        CALL                7                   # starkware.cairo.lang.compiler.lib.registers.get_ap
+offset 222:        ASSERT_EQ           [FP], [AP-1] + 6    
+offset 224:        PUSH                [[FP-3]+2]    
+offset 225:        PUSH                0x480680017fff8000
+offset 227:        PUSH                [FP-4]        
+offset 228:        PUSH                0x400680017fff8000
+offset 230:        PUSH                [[FP-3]]      
+offset 231:        PUSH                0x48507fff7fff8000
+offset 233:        PUSH                0x484480017fff8000
+offset 235:        PUSH                4919                # 0x1337
+offset 237:        PUSH                0x400680017fff8000
+offset 239:        PUSH                4918                # 0x1336
+offset 241:        PUSH                0x484480017fff8000
+offset 243:        PUSH                [[FP-3]+1]    
+offset 244:        PUSH                [AP-12] * [AP-10]
+offset 245:        CALL                abs [FP]            
+offset 246:        RET                 
+
+// Function 20
+func __main__._validate{syscall_ptr : felt*, pedersen_ptr : starkware.cairo.common.cairo_builtins.HashBuiltin*, range_check_ptr : felt}(id_hash : felt, code : felt*)
+
+offset 247:        PUSH                [FP-4]        
+offset 248:        PUSH                [FP-3]        
+offset 249:        CALL                218                 # __main__.j        
+offset 251:        PUSH                [FP-7]        
+offset 252:        PUSH                [FP-6]        
+offset 253:        PUSH                [FP-5]        
+offset 254:        RET                 
+
+// Function 21
+func __main__.first{pedersen_ptr : starkware.cairo.common.cairo_builtins.HashBuiltin*}(curr : felt, in_len : felt, in : felt*) -> (res : felt)
+
+offset 255:        NOP                 
+offset 257:        JNZ                 5                   # JMP 262           
+offset 259:        PUSH                [FP-6]        
+offset 260:        PUSH                [FP-5]        
+offset 261:        RET                 
+offset 262:        PUSH                [FP-6]        
+offset 263:        PUSH                [FP-5]        
+offset 264:        PUSH                [[FP-3]]      
+offset 265:        CALL                0                   # starkware.cairo.common.hash.hash2
+offset 267:        PUSH                [FP-4] + -1   
+offset 269:        PUSH                [FP-3] + 1    
+offset 271:        CALL                255                 # __main__.first    
+offset 273:        RET                 
+
+// Function 22
+func __main__.second{range_check_ptr : felt}(h : felt, a : felt, b : felt)
+
+offset 274:        ASSERT_EQ           [FP-4], [[FP-6]]    
+offset 275:        ASSERT_EQ           [FP-3], [[FP-6]+1]  
+offset 276:        PUSH                0x1000000000000000000000000000
+offset 278:        ASSERT_EQ           [AP-1], [AP] + [FP-4]
+offset 278:        ADD                 AP, 1               
+offset 279:        ASSERT_EQ           [AP-1], [[FP-6]+2]  
+offset 280:        PUSH                [FP-4] * 0x100000000000000000000000000000000
+offset 282:        ASSERT_EQ           [FP-5], [AP-1] + [FP-3]
+offset 283:        PUSH                [FP-6] + 3    
+offset 285:        RET                 
+
+// Function 23
+@external func __main__.validate{syscall_ptr : felt*, pedersen_ptr : starkware.cairo.common.cairo_builtins.HashBuiltin*, range_check_ptr : felt}(id : felt, code_len : felt, code : felt*, a : felt, b : felt)
+
+offset 286:        NOP                 
+offset 288:        PUSH                [FP-10]       
+offset 289:        PUSH                [FP-9]        
+offset 290:        PUSH                [FP-8]        
+offset 291:        CALL                398                 # __main__.assert_only_owner
+offset 293:        PUSH                [FP-7]        
+offset 294:        CALL                411                 # __main__.assert_only_once
+offset 296:        PUSH                [FP-7]        
+offset 297:        PUSH                1                   # 0x1
+offset 299:        CALL                116                 # __main__.ids.write
+offset 301:        CALL                164                 # __main__.nonce.read
+offset 303:        ASSERT_EQ           [FP], [AP-2]        
+offset 304:        ASSERT_EQ           [FP+1], [AP-1]      
+offset 305:        ASSERT_EQ           [FP+2], [AP-4]      
+offset 306:        PUSH                [AP-3]        
+offset 307:        PUSH                [FP+1]        
+offset 308:        PUSH                [FP-6]        
+offset 309:        PUSH                [FP-5]        
+offset 310:        CALL                255                 # __main__.first    
+offset 312:        PUSH                [FP]          
+offset 313:        PUSH                [AP-2]        
+offset 314:        PUSH                [FP-4]        
+offset 315:        PUSH                [FP-3]        
+offset 316:        CALL                274                 # __main__.second   
+offset 318:        PUSH                [AP-12]       
+offset 319:        PUSH                [FP+1]        
+offset 320:        PUSH                [FP-7]        
+offset 321:        CALL                0                   # starkware.cairo.common.hash.hash2
+offset 323:        ASSERT_EQ           [FP-6], [[AP-8]]    
+offset 324:        PUSH                [FP-6] + -3   
+offset 326:        ASSERT_EQ           [AP-1], [[AP-9]+1]  
+offset 327:        PUSH                [FP+2]        
+offset 328:        PUSH                [AP-4]        
+offset 329:        PUSH                [AP-11] + 2   
+offset 331:        PUSH                [AP-5]        
+offset 332:        PUSH                [FP-5]        
+offset 333:        CALL                247                 # __main__._validate
+offset 335:        RET                 
+
+// Function 24
+@external func __wrappers__.validate{}() -> (syscall_ptr : felt*, pedersen_ptr : starkware.cairo.common.cairo_builtins.HashBuiltin*, range_check_ptr : felt, size : felt, retdata : felt*)
+
+offset 336:        PUSH                [[FP-5]+2]    
+offset 337:        PUSH                [[FP-3]+1]    
+offset 338:        ASSERT_EQ           [AP-1], [[AP-2]]    
+offset 339:        PUSH                [FP-3] + 2    
+offset 341:        PUSH                [[FP-3]+1]    
+offset 342:        PUSH                [AP-2] + [AP-1]
+offset 343:        PUSH                [AP-1] + 2    
+offset 345:        ASSERT_EQ           [AP-1], [FP-4] + [FP-3]
+offset 346:        PUSH                [[FP-5]+2]    
+offset 347:        PUSH                [[FP-5]]      
+offset 348:        PUSH                [[FP-5]+1]    
+offset 349:        PUSH                [AP-3] + 1    
+offset 351:        PUSH                [[FP-3]]      
+offset 352:        PUSH                [[FP-3]+1]    
+offset 353:        PUSH                [FP-3] + 2    
+offset 355:        PUSH                [[AP-9]]      
+offset 356:        PUSH                [[AP-10]+1]   
+offset 357:        CALL                286                 # __main__.validate 
+offset 359:        NOP                  # memory[ap] = segments.add()
+offset 361:        PUSH                [AP-4]        
+offset 362:        PUSH                [AP-4]        
+offset 363:        PUSH                [AP-4]        
+offset 364:        PUSH                0                   # 0x0
+offset 366:        PUSH                [AP-5]        
+offset 367:        RET                 
+
+// Function 25
+@view func __main__.get_owner{syscall_ptr : felt*, pedersen_ptr : starkware.cairo.common.cairo_builtins.HashBuiltin*, range_check_ptr : felt}() -> (account : felt)
+
+offset 368:        PUSH                [FP-5]        
+offset 369:        PUSH                [FP-4]        
+offset 370:        PUSH                [FP-3]        
+offset 371:        CALL                134                 # __main__.owner.read
+offset 373:        RET                 
+
+// Function 26
+func __wrappers__.get_owner_encode_return{}(ret_value : (account: felt), range_check_ptr : felt) -> (range_check_ptr : felt, data_len : felt, data : felt*)
+
+offset 374:        NOP                  # memory[ap] = segments.add()
+offset 376:        ASSERT_EQ           [FP-4], [[FP]]      
+offset 377:        PUSH                [FP] + 1      
+offset 379:        PUSH                [FP-3]        
+offset 380:        ASSERT_EQ           [AP-2], [AP] + [FP] 
+offset 380:        ADD                 AP, 1               
+offset 381:        PUSH                [FP]          
+offset 382:        RET                 
+
+// Function 27
+@view func __wrappers__.get_owner{}() -> (syscall_ptr : felt*, pedersen_ptr : starkware.cairo.common.cairo_builtins.HashBuiltin*, range_check_ptr : felt, size : felt, retdata : felt*)
+
+offset 383:        ASSERT_EQ           [FP-3], [FP-4] + [FP-3]
+offset 384:        PUSH                [[FP-5]]      
+offset 385:        PUSH                [[FP-5]+1]    
+offset 386:        PUSH                [[FP-5]+2]    
+offset 387:        CALL                368                 # __main__.get_owner
+offset 389:        PUSH                [AP-2]        
+offset 390:        CALL                374                 # __wrappers__.get_owner_encode_return
+offset 392:        PUSH                [AP-12]       
+offset 393:        PUSH                [AP-12]       
+offset 394:        PUSH                [AP-5]        
+offset 395:        PUSH                [AP-5]        
+offset 396:        PUSH                [AP-5]        
+offset 397:        RET                 
+
+// Function 28
+func __main__.assert_only_owner{syscall_ptr : felt*, pedersen_ptr : starkware.cairo.common.cairo_builtins.HashBuiltin*, range_check_ptr : felt}()
+
+offset 398:        PUSH                [FP-5]        
+offset 399:        PUSH                [FP-4]        
+offset 400:        PUSH                [FP-3]        
+offset 401:        CALL                134                 # __main__.owner.read
+offset 403:        PUSH                [AP-4]        
+offset 404:        CALL                65                  # starkware.starknet.common.syscalls.get_caller_address
+offset 406:        ASSERT_EQ           [AP-7], [AP-1]      
+offset 407:        PUSH                [AP-2]        
+offset 408:        PUSH                [AP-10]       
+offset 409:        PUSH                [AP-10]       
+offset 410:        RET                 
+
+// Function 29
+func __main__.assert_only_once{syscall_ptr : felt*, pedersen_ptr : starkware.cairo.common.cairo_builtins.HashBuiltin*, range_check_ptr : felt}(id : felt)
+
+offset 411:        PUSH                [FP-6]        
+offset 412:        PUSH                [FP-5]        
+offset 413:        PUSH                [FP-4]        
+offset 414:        PUSH                [FP-3]        
+offset 415:        CALL                102                 # __main__.ids.read 
+offset 417:        ASSERT_EQ           [AP-1], 0           # 0x0               
+offset 419:        PUSH                [AP-4]        
+offset 420:        PUSH                [AP-4]        
+offset 421:        PUSH                [AP-4]        
+offset 422:        RET                 
+

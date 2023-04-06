@@ -1,0 +1,1195 @@
+___________________________________________________________________________
+
+%builtins pedersen range_check
+___________________________________________________________________________
+struct __main__._validate.Args:
+	member id_hash : felt
+	member code : felt*
+end
+
+struct __main__._validate.ImplicitArgs:
+	member syscall_ptr : felt*
+	member pedersen_ptr : starkware.cairo.common.cairo_builtins.HashBuiltin*
+	member range_check_ptr : felt
+end
+
+struct __main__.assert_only_once.Args:
+	member id : felt
+end
+
+struct __main__.assert_only_once.ImplicitArgs:
+	member syscall_ptr : felt*
+	member pedersen_ptr : starkware.cairo.common.cairo_builtins.HashBuiltin*
+	member range_check_ptr : felt
+end
+
+struct __main__.assert_only_owner.Args:
+end
+
+struct __main__.assert_only_owner.ImplicitArgs:
+	member syscall_ptr : felt*
+	member pedersen_ptr : starkware.cairo.common.cairo_builtins.HashBuiltin*
+	member range_check_ptr : felt
+end
+
+struct __main__.constructor.Args:
+	member _owner : felt
+	member _nonce : felt
+end
+
+struct __main__.constructor.ImplicitArgs:
+	member syscall_ptr : felt*
+	member pedersen_ptr : starkware.cairo.common.cairo_builtins.HashBuiltin*
+	member range_check_ptr : felt
+end
+
+struct __main__.first.Args:
+	member curr : felt
+	member in_len : felt
+	member in : felt*
+end
+
+struct __main__.first.ImplicitArgs:
+	member pedersen_ptr : starkware.cairo.common.cairo_builtins.HashBuiltin*
+end
+
+struct __main__.get_owner.Args:
+end
+
+struct __main__.get_owner.ImplicitArgs:
+	member syscall_ptr : felt*
+	member pedersen_ptr : starkware.cairo.common.cairo_builtins.HashBuiltin*
+	member range_check_ptr : felt
+end
+
+struct __main__.ids.Args:
+end
+
+struct __main__.ids.ImplicitArgs:
+end
+
+struct __main__.ids.addr.Args:
+	member pubkey : felt
+end
+
+struct __main__.ids.addr.ImplicitArgs:
+	member pedersen_ptr : starkware.cairo.common.cairo_builtins.HashBuiltin*
+	member range_check_ptr : felt
+end
+
+struct __main__.ids.read.Args:
+	member pubkey : felt
+end
+
+struct __main__.ids.read.ImplicitArgs:
+	member syscall_ptr : felt*
+	member pedersen_ptr : starkware.cairo.common.cairo_builtins.HashBuiltin*
+	member range_check_ptr : felt
+end
+
+struct __main__.ids.write.Args:
+	member pubkey : felt
+	member value : felt
+end
+
+struct __main__.ids.write.ImplicitArgs:
+	member syscall_ptr : felt*
+	member pedersen_ptr : starkware.cairo.common.cairo_builtins.HashBuiltin*
+	member range_check_ptr : felt
+end
+
+struct __main__.j.Args:
+	member id_hash : felt
+	member code : felt*
+end
+
+struct __main__.j.ImplicitArgs:
+end
+
+struct __main__.nonce.Args:
+end
+
+struct __main__.nonce.ImplicitArgs:
+end
+
+struct __main__.nonce.addr.Args:
+end
+
+struct __main__.nonce.addr.ImplicitArgs:
+	member pedersen_ptr : starkware.cairo.common.cairo_builtins.HashBuiltin*
+	member range_check_ptr : felt
+end
+
+struct __main__.nonce.read.Args:
+end
+
+struct __main__.nonce.read.ImplicitArgs:
+	member syscall_ptr : felt*
+	member pedersen_ptr : starkware.cairo.common.cairo_builtins.HashBuiltin*
+	member range_check_ptr : felt
+end
+
+struct __main__.nonce.write.Args:
+	member value : felt
+end
+
+struct __main__.nonce.write.ImplicitArgs:
+	member syscall_ptr : felt*
+	member pedersen_ptr : starkware.cairo.common.cairo_builtins.HashBuiltin*
+	member range_check_ptr : felt
+end
+
+struct __main__.owner.Args:
+end
+
+struct __main__.owner.ImplicitArgs:
+end
+
+struct __main__.owner.addr.Args:
+end
+
+struct __main__.owner.addr.ImplicitArgs:
+	member pedersen_ptr : starkware.cairo.common.cairo_builtins.HashBuiltin*
+	member range_check_ptr : felt
+end
+
+struct __main__.owner.read.Args:
+end
+
+struct __main__.owner.read.ImplicitArgs:
+	member syscall_ptr : felt*
+	member pedersen_ptr : starkware.cairo.common.cairo_builtins.HashBuiltin*
+	member range_check_ptr : felt
+end
+
+struct __main__.owner.write.Args:
+	member value : felt
+end
+
+struct __main__.owner.write.ImplicitArgs:
+	member syscall_ptr : felt*
+	member pedersen_ptr : starkware.cairo.common.cairo_builtins.HashBuiltin*
+	member range_check_ptr : felt
+end
+
+struct __main__.second.Args:
+	member h : felt
+	member a : felt
+	member b : felt
+end
+
+struct __main__.second.ImplicitArgs:
+	member range_check_ptr : felt
+end
+
+struct __main__.validate.Args:
+	member id : felt
+	member code_len : felt
+	member code : felt*
+	member a : felt
+	member b : felt
+end
+
+struct __main__.validate.ImplicitArgs:
+	member syscall_ptr : felt*
+	member pedersen_ptr : starkware.cairo.common.cairo_builtins.HashBuiltin*
+	member range_check_ptr : felt
+end
+
+struct __wrappers__.constructor.Args:
+end
+
+struct __wrappers__.constructor.ImplicitArgs:
+end
+
+struct __wrappers__.get_owner.Args:
+end
+
+struct __wrappers__.get_owner.ImplicitArgs:
+end
+
+struct __wrappers__.get_owner_encode_return.Args:
+	member ret_value : (account: felt)
+	member range_check_ptr : felt
+end
+
+struct __wrappers__.get_owner_encode_return.ImplicitArgs:
+end
+
+struct __wrappers__.validate.Args:
+end
+
+struct __wrappers__.validate.ImplicitArgs:
+end
+
+struct starkware.cairo.common.cairo_builtins.BitwiseBuiltin:
+	member x : felt
+	member y : felt
+	member x_and_y : felt
+	member x_xor_y : felt
+	member x_or_y : felt
+end
+
+struct starkware.cairo.common.cairo_builtins.EcOpBuiltin:
+	member p : starkware.cairo.common.ec_point.EcPoint
+	member q : starkware.cairo.common.ec_point.EcPoint
+	member m : felt
+	member r : starkware.cairo.common.ec_point.EcPoint
+end
+
+struct starkware.cairo.common.cairo_builtins.HashBuiltin:
+	member x : felt
+	member y : felt
+	member result : felt
+end
+
+struct starkware.cairo.common.cairo_builtins.KeccakBuiltin:
+	member input : starkware.cairo.common.keccak_state.KeccakBuiltinState
+	member output : starkware.cairo.common.keccak_state.KeccakBuiltinState
+end
+
+struct starkware.cairo.common.cairo_builtins.SignatureBuiltin:
+	member pub_key : felt
+	member message : felt
+end
+
+struct starkware.cairo.common.dict_access.DictAccess:
+	member key : felt
+	member prev_value : felt
+	member new_value : felt
+end
+
+struct starkware.cairo.common.ec_point.EcPoint:
+	member x : felt
+	member y : felt
+end
+
+struct starkware.cairo.common.hash.hash2.Args:
+	member x : felt
+	member y : felt
+end
+
+struct starkware.cairo.common.hash.hash2.ImplicitArgs:
+	member hash_ptr : starkware.cairo.common.cairo_builtins.HashBuiltin*
+end
+
+struct starkware.cairo.common.keccak_state.KeccakBuiltinState:
+	member s0 : felt
+	member s1 : felt
+	member s2 : felt
+	member s3 : felt
+	member s4 : felt
+	member s5 : felt
+	member s6 : felt
+	member s7 : felt
+end
+
+struct starkware.cairo.common.math.assert_250_bit.Args:
+	member value : felt
+end
+
+struct starkware.cairo.common.math.assert_250_bit.ImplicitArgs:
+	member range_check_ptr : felt
+end
+
+struct starkware.cairo.lang.compiler.lib.registers.get_ap.Args:
+end
+
+struct starkware.cairo.lang.compiler.lib.registers.get_ap.ImplicitArgs:
+end
+
+struct starkware.cairo.lang.compiler.lib.registers.get_fp_and_pc.Args:
+end
+
+struct starkware.cairo.lang.compiler.lib.registers.get_fp_and_pc.ImplicitArgs:
+end
+
+struct starkware.starknet.common.storage.normalize_address.Args:
+	member addr : felt
+end
+
+struct starkware.starknet.common.storage.normalize_address.ImplicitArgs:
+	member range_check_ptr : felt
+end
+
+struct starkware.starknet.common.syscalls.CallContract:
+	member request : starkware.starknet.common.syscalls.CallContractRequest
+	member response : starkware.starknet.common.syscalls.CallContractResponse
+end
+
+struct starkware.starknet.common.syscalls.CallContractRequest:
+	member selector : felt
+	member contract_address : felt
+	member function_selector : felt
+	member calldata_size : felt
+	member calldata : felt*
+end
+
+struct starkware.starknet.common.syscalls.CallContractResponse:
+	member retdata_size : felt
+	member retdata : felt*
+end
+
+struct starkware.starknet.common.syscalls.Deploy:
+	member request : starkware.starknet.common.syscalls.DeployRequest
+	member response : starkware.starknet.common.syscalls.DeployResponse
+end
+
+struct starkware.starknet.common.syscalls.DeployRequest:
+	member selector : felt
+	member class_hash : felt
+	member contract_address_salt : felt
+	member constructor_calldata_size : felt
+	member constructor_calldata : felt*
+	member deploy_from_zero : felt
+end
+
+struct starkware.starknet.common.syscalls.DeployResponse:
+	member contract_address : felt
+	member constructor_retdata_size : felt
+	member constructor_retdata : felt*
+end
+
+struct starkware.starknet.common.syscalls.EmitEvent:
+	member selector : felt
+	member keys_len : felt
+	member keys : felt*
+	member data_len : felt
+	member data : felt*
+end
+
+struct starkware.starknet.common.syscalls.GetBlockNumber:
+	member request : starkware.starknet.common.syscalls.GetBlockNumberRequest
+	member response : starkware.starknet.common.syscalls.GetBlockNumberResponse
+end
+
+struct starkware.starknet.common.syscalls.GetBlockNumberRequest:
+	member selector : felt
+end
+
+struct starkware.starknet.common.syscalls.GetBlockNumberResponse:
+	member block_number : felt
+end
+
+struct starkware.starknet.common.syscalls.GetBlockTimestamp:
+	member request : starkware.starknet.common.syscalls.GetBlockTimestampRequest
+	member response : starkware.starknet.common.syscalls.GetBlockTimestampResponse
+end
+
+struct starkware.starknet.common.syscalls.GetBlockTimestampRequest:
+	member selector : felt
+end
+
+struct starkware.starknet.common.syscalls.GetBlockTimestampResponse:
+	member block_timestamp : felt
+end
+
+struct starkware.starknet.common.syscalls.GetCallerAddress:
+	member request : starkware.starknet.common.syscalls.GetCallerAddressRequest
+	member response : starkware.starknet.common.syscalls.GetCallerAddressResponse
+end
+
+struct starkware.starknet.common.syscalls.GetCallerAddressRequest:
+	member selector : felt
+end
+
+struct starkware.starknet.common.syscalls.GetCallerAddressResponse:
+	member caller_address : felt
+end
+
+struct starkware.starknet.common.syscalls.GetContractAddress:
+	member request : starkware.starknet.common.syscalls.GetContractAddressRequest
+	member response : starkware.starknet.common.syscalls.GetContractAddressResponse
+end
+
+struct starkware.starknet.common.syscalls.GetContractAddressRequest:
+	member selector : felt
+end
+
+struct starkware.starknet.common.syscalls.GetContractAddressResponse:
+	member contract_address : felt
+end
+
+struct starkware.starknet.common.syscalls.GetSequencerAddress:
+	member request : starkware.starknet.common.syscalls.GetSequencerAddressRequest
+	member response : starkware.starknet.common.syscalls.GetSequencerAddressResponse
+end
+
+struct starkware.starknet.common.syscalls.GetSequencerAddressRequest:
+	member selector : felt
+end
+
+struct starkware.starknet.common.syscalls.GetSequencerAddressResponse:
+	member sequencer_address : felt
+end
+
+struct starkware.starknet.common.syscalls.GetTxInfo:
+	member request : starkware.starknet.common.syscalls.GetTxInfoRequest
+	member response : starkware.starknet.common.syscalls.GetTxInfoResponse
+end
+
+struct starkware.starknet.common.syscalls.GetTxInfoRequest:
+	member selector : felt
+end
+
+struct starkware.starknet.common.syscalls.GetTxInfoResponse:
+	member tx_info : starkware.starknet.common.syscalls.TxInfo*
+end
+
+struct starkware.starknet.common.syscalls.GetTxSignature:
+	member request : starkware.starknet.common.syscalls.GetTxSignatureRequest
+	member response : starkware.starknet.common.syscalls.GetTxSignatureResponse
+end
+
+struct starkware.starknet.common.syscalls.GetTxSignatureRequest:
+	member selector : felt
+end
+
+struct starkware.starknet.common.syscalls.GetTxSignatureResponse:
+	member signature_len : felt
+	member signature : felt*
+end
+
+struct starkware.starknet.common.syscalls.LibraryCall:
+	member request : starkware.starknet.common.syscalls.LibraryCallRequest
+	member response : starkware.starknet.common.syscalls.CallContractResponse
+end
+
+struct starkware.starknet.common.syscalls.LibraryCallRequest:
+	member selector : felt
+	member class_hash : felt
+	member function_selector : felt
+	member calldata_size : felt
+	member calldata : felt*
+end
+
+struct starkware.starknet.common.syscalls.SendMessageToL1SysCall:
+	member selector : felt
+	member to_address : felt
+	member payload_size : felt
+	member payload_ptr : felt*
+end
+
+struct starkware.starknet.common.syscalls.StorageRead:
+	member request : starkware.starknet.common.syscalls.StorageReadRequest
+	member response : starkware.starknet.common.syscalls.StorageReadResponse
+end
+
+struct starkware.starknet.common.syscalls.StorageReadRequest:
+	member selector : felt
+	member address : felt
+end
+
+struct starkware.starknet.common.syscalls.StorageReadResponse:
+	member value : felt
+end
+
+struct starkware.starknet.common.syscalls.StorageWrite:
+	member selector : felt
+	member address : felt
+	member value : felt
+end
+
+struct starkware.starknet.common.syscalls.TxInfo:
+	member version : felt
+	member account_contract_address : felt
+	member max_fee : felt
+	member signature_len : felt
+	member signature : felt*
+	member transaction_hash : felt
+	member chain_id : felt
+	member nonce : felt
+end
+
+struct starkware.starknet.common.syscalls.get_caller_address.Args:
+end
+
+struct starkware.starknet.common.syscalls.get_caller_address.ImplicitArgs:
+	member syscall_ptr : felt*
+end
+
+struct starkware.starknet.common.syscalls.storage_read.Args:
+	member address : felt
+end
+
+struct starkware.starknet.common.syscalls.storage_read.ImplicitArgs:
+	member syscall_ptr : felt*
+end
+
+struct starkware.starknet.common.syscalls.storage_write.Args:
+	member address : felt
+	member value : felt
+end
+
+struct starkware.starknet.common.syscalls.storage_write.ImplicitArgs:
+	member syscall_ptr : felt*
+end
+
+
+___________________________________________________________________________
+
+// Function 0
+func starkware.cairo.common.hash.hash2{hash_ptr : starkware.cairo.common.cairo_builtins.HashBuiltin*}(x : felt, y : felt) -> (result : felt)
+
+offset 0:          ASSERT_EQ           [FP-4], [[FP-5]]    
+offset 1:          ASSERT_EQ           [FP-3], [[FP-5]+1]  
+offset 2:          ASSERT_EQ           [AP], [FP-5] + 3    
+offset 2:          ADD                 AP, 1               
+offset 4:          ASSERT_EQ           [AP], [[FP-5]+2]    
+offset 4:          ADD                 AP, 1               
+offset 5:          RET                 
+
+// Function 1
+func starkware.cairo.lang.compiler.lib.registers.get_fp_and_pc{}() -> (fp_val : felt*, pc_val : felt*)
+
+offset 6:          RET                 
+
+// Function 2
+@known_ap_change func starkware.cairo.lang.compiler.lib.registers.get_ap{}() -> (ap_val : felt*)
+
+offset 7:          CALL                6                   # starkware.cairo.lang.compiler.lib.registers.get_fp_and_pc
+offset 9:          ASSERT_EQ           [AP], [AP-2] + -2   
+offset 9:          ADD                 AP, 1               
+offset 11:         RET                 
+
+// Function 3
+@known_ap_change func starkware.cairo.common.math.assert_250_bit{range_check_ptr : felt}(value : felt)
+
+offset 12:         ASSERT_EQ           [AP], 0x3ffffffffffffffffffffffffffffff
+offset 12:         ADD                 AP, 1                # from starkware.cairo.common.math_utils import as_int
+
+# Correctness check.
+value = as_int(ids.value, PRIME) % PRIME
+assert value < ids.UPPER_BOUND, f'{value} is outside of the range [0, 2**250).'
+
+# Calculation for the assertion.
+ids.high, ids.low = divmod(ids.value, ids.SHIFT)
+offset 14:         ASSERT_EQ           [AP], [[FP-4]+1]    
+offset 14:         ADD                 AP, 1               
+offset 15:         ASSERT_EQ           [AP-2], [AP] + [AP-1]
+offset 15:         ADD                 AP, 1               
+offset 16:         ASSERT_EQ           [AP-1], [[FP-4]+2]  
+offset 17:         ASSERT_EQ           [AP], [[FP-4]+1]    
+offset 17:         ADD                 AP, 1               
+offset 18:         ASSERT_EQ           [AP], [AP-1] * 0x100000000000000000000000000000000
+offset 18:         ADD                 AP, 1               
+offset 20:         ASSERT_EQ           [AP], [[FP-4]]      
+offset 20:         ADD                 AP, 1               
+offset 21:         ASSERT_EQ           [FP-3], [AP-2] + [AP-1]
+offset 22:         ASSERT_EQ           [AP], [FP-4] + 3    
+offset 22:         ADD                 AP, 1               
+offset 24:         RET                 
+
+// Function 4
+@known_ap_change func starkware.starknet.common.storage.normalize_address{range_check_ptr : felt}(addr : felt) -> (res : felt)
+
+offset 25:         NOP                 
+offset 27:         JNZ                 16                  # JMP 43             # # Verify the assumptions on the relationship between 2**250, ADDR_BOUND and PRIME.
+ADDR_BOUND = ids.ADDR_BOUND % PRIME
+assert (2**250 < ADDR_BOUND <= 2**251) and (2 * 2**250 < PRIME) and (
+        ADDR_BOUND * 2 > PRIME), \
+    'normalize_address() cannot be used with the current constants.'
+ids.is_small = 1 if ids.addr < ADDR_BOUND else 0
+offset 29:         ASSERT_EQ           [AP], [FP-4]        
+offset 29:         ADD                 AP, 1               
+offset 30:         ASSERT_EQ           [AP], [FP-3] + 0x11000000000000000000000000000000000000000000000101
+offset 30:         ADD                 AP, 1               
+offset 32:         CALL                12                  # starkware.cairo.common.math.assert_250_bit
+offset 34:         ASSERT_EQ           [AP], -1            # -0x1              
+offset 34:         ADD                 AP, 1               
+offset 36:         ASSERT_EQ           [AP], [AP-2]        
+offset 36:         ADD                 AP, 1               
+offset 37:         ASSERT_EQ           [AP-2], [AP] + [FP-3]
+offset 37:         ADD                 AP, 1               
+offset 38:         CALL                12                  # starkware.cairo.common.math.assert_250_bit
+offset 40:         ASSERT_EQ           [AP], [FP-3] + 0x11000000000000000000000000000000000000000000000101
+offset 40:         ADD                 AP, 1               
+offset 42:         RET                 
+offset 43:         NOP                 
+offset 45:         JNZ                 12                  # JMP 57             # ids.is_250 = 1 if ids.addr < 2**250 else 0
+offset 47:         NOP                 
+offset 49:         ASSERT_EQ           [AP], 0x7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffeff
+offset 49:         ADD                 AP, 1               
+offset 51:         ASSERT_EQ           [AP], [FP-4]        
+offset 51:         ADD                 AP, 1               
+offset 52:         ASSERT_EQ           [AP-2], [AP] + [FP-3]
+offset 52:         ADD                 AP, 1               
+offset 53:         CALL                12                  # starkware.cairo.common.math.assert_250_bit
+offset 55:         JUMP_REL            8                   # JMP 63            
+offset 57:         NOP                 
+offset 59:         ASSERT_EQ           [AP], [FP-4]        
+offset 59:         ADD                 AP, 1               
+offset 60:         ASSERT_EQ           [AP], [FP-3]        
+offset 60:         ADD                 AP, 1               
+offset 61:         CALL                12                  # starkware.cairo.common.math.assert_250_bit
+offset 63:         ASSERT_EQ           [AP], [FP-3]        
+offset 63:         ADD                 AP, 1               
+offset 64:         RET                 
+
+// Function 5
+func starkware.starknet.common.syscalls.get_caller_address{syscall_ptr : felt*}() -> (caller_address : felt)
+
+offset 65:         ASSERT_EQ           [AP], 0x47657443616c6c657241646472657373
+offset 65:         ADD                 AP, 1               
+offset 67:         ASSERT_EQ           [AP-1], [[FP-3]]    
+offset 68:         ASSERT_EQ           [AP], [FP-3] + 2    
+offset 68:         ADD                 AP, 1                # syscall_handler.get_caller_address(segments=segments, syscall_ptr=ids.syscall_ptr)
+offset 70:         ASSERT_EQ           [AP], [[FP-3]+1]    
+offset 70:         ADD                 AP, 1               
+offset 71:         RET                 
+
+// Function 6
+func starkware.starknet.common.syscalls.storage_read{syscall_ptr : felt*}(address : felt) -> (value : felt)
+
+offset 72:         ASSERT_EQ           [AP], 0x53746f7261676552656164
+offset 72:         ADD                 AP, 1               
+offset 74:         ASSERT_EQ           [AP-1], [[FP-4]]    
+offset 75:         ASSERT_EQ           [FP-3], [[FP-4]+1]  
+offset 76:         ASSERT_EQ           [AP], [FP-4] + 3    
+offset 76:         ADD                 AP, 1                # syscall_handler.storage_read(segments=segments, syscall_ptr=ids.syscall_ptr)
+offset 78:         ASSERT_EQ           [AP], [[FP-4]+2]    
+offset 78:         ADD                 AP, 1               
+offset 79:         RET                 
+
+// Function 7
+func starkware.starknet.common.syscalls.storage_write{syscall_ptr : felt*}(address : felt, value : felt)
+
+offset 80:         ASSERT_EQ           [AP], 0x53746f726167655772697465
+offset 80:         ADD                 AP, 1               
+offset 82:         ASSERT_EQ           [AP-1], [[FP-5]]    
+offset 83:         ASSERT_EQ           [FP-4], [[FP-5]+1]  
+offset 84:         ASSERT_EQ           [FP-3], [[FP-5]+2]  
+offset 85:         ASSERT_EQ           [AP], [FP-5] + 3    
+offset 85:         ADD                 AP, 1                # syscall_handler.storage_write(segments=segments, syscall_ptr=ids.syscall_ptr)
+offset 87:         RET                 
+
+// Function 8
+func __main__.ids.addr{pedersen_ptr : starkware.cairo.common.cairo_builtins.HashBuiltin*, range_check_ptr : felt}(pubkey : felt) -> (res : felt)
+
+offset 88:         ASSERT_EQ           [AP], [FP-5]        
+offset 88:         ADD                 AP, 1               
+offset 89:         ASSERT_EQ           [AP], 0x15a59b5fd505b82b3aff0b04f5cdd2ceb73c4478a788ac7a91d4ae213ec3e04
+offset 89:         ADD                 AP, 1               
+offset 91:         ASSERT_EQ           [AP], [FP-3]        
+offset 91:         ADD                 AP, 1               
+offset 92:         CALL                0                   # starkware.cairo.common.hash.hash2
+offset 94:         ASSERT_EQ           [AP], [FP-4]        
+offset 94:         ADD                 AP, 1               
+offset 95:         ASSERT_EQ           [AP], [AP-2]        
+offset 95:         ADD                 AP, 1               
+offset 96:         CALL                25                  # starkware.starknet.common.storage.normalize_address
+offset 98:         ASSERT_EQ           [AP], [AP-31]       
+offset 98:         ADD                 AP, 1               
+offset 99:         ASSERT_EQ           [AP], [AP-3]        
+offset 99:         ADD                 AP, 1               
+offset 100:        ASSERT_EQ           [AP], [AP-3]        
+offset 100:        ADD                 AP, 1               
+offset 101:        RET                 
+
+// Function 9
+func __main__.ids.read{syscall_ptr : felt*, pedersen_ptr : starkware.cairo.common.cairo_builtins.HashBuiltin*, range_check_ptr : felt}(pubkey : felt) -> (res : felt)
+
+offset 102:        ASSERT_EQ           [AP], [FP-5]        
+offset 102:        ADD                 AP, 1               
+offset 103:        ASSERT_EQ           [AP], [FP-4]        
+offset 103:        ADD                 AP, 1               
+offset 104:        ASSERT_EQ           [AP], [FP-3]        
+offset 104:        ADD                 AP, 1               
+offset 105:        CALL                88                  # __main__.ids.addr 
+offset 107:        ASSERT_EQ           [AP], [FP-6]        
+offset 107:        ADD                 AP, 1               
+offset 108:        ASSERT_EQ           [AP], [AP-2]        
+offset 108:        ADD                 AP, 1               
+offset 109:        CALL                72                  # starkware.starknet.common.syscalls.storage_read
+offset 111:        ASSERT_EQ           [AP], [AP-2]        
+offset 111:        ADD                 AP, 1               
+offset 112:        ASSERT_EQ           [AP], [AP-11]       
+offset 112:        ADD                 AP, 1               
+offset 113:        ASSERT_EQ           [AP], [AP-11]       
+offset 113:        ADD                 AP, 1               
+offset 114:        ASSERT_EQ           [AP], [AP-4]        
+offset 114:        ADD                 AP, 1               
+offset 115:        RET                 
+
+// Function 10
+func __main__.ids.write{syscall_ptr : felt*, pedersen_ptr : starkware.cairo.common.cairo_builtins.HashBuiltin*, range_check_ptr : felt}(pubkey : felt, value : felt)
+
+offset 116:        ASSERT_EQ           [AP], [FP-6]        
+offset 116:        ADD                 AP, 1               
+offset 117:        ASSERT_EQ           [AP], [FP-5]        
+offset 117:        ADD                 AP, 1               
+offset 118:        ASSERT_EQ           [AP], [FP-4]        
+offset 118:        ADD                 AP, 1               
+offset 119:        CALL                88                  # __main__.ids.addr 
+offset 121:        ASSERT_EQ           [AP], [FP-7]        
+offset 121:        ADD                 AP, 1               
+offset 122:        ASSERT_EQ           [AP], [AP-2]        
+offset 122:        ADD                 AP, 1               
+offset 123:        ASSERT_EQ           [AP], [FP-3]        
+offset 123:        ADD                 AP, 1               
+offset 124:        CALL                80                  # starkware.starknet.common.syscalls.storage_write
+offset 126:        ASSERT_EQ           [AP], [AP-10]       
+offset 126:        ADD                 AP, 1               
+offset 127:        ASSERT_EQ           [AP], [AP-10]       
+offset 127:        ADD                 AP, 1               
+offset 128:        RET                 
+
+// Function 11
+func __main__.owner.addr{pedersen_ptr : starkware.cairo.common.cairo_builtins.HashBuiltin*, range_check_ptr : felt}() -> (res : felt)
+
+offset 129:        ASSERT_EQ           [AP], [FP-4]        
+offset 129:        ADD                 AP, 1               
+offset 130:        ASSERT_EQ           [AP], [FP-3]        
+offset 130:        ADD                 AP, 1               
+offset 131:        ASSERT_EQ           [AP], 0x2016836a56b71f0d02689e69e326f4f4c1b9057164ef592671cf0d37c8040c0
+offset 131:        ADD                 AP, 1               
+offset 133:        RET                 
+
+// Function 12
+func __main__.owner.read{syscall_ptr : felt*, pedersen_ptr : starkware.cairo.common.cairo_builtins.HashBuiltin*, range_check_ptr : felt}() -> (account : felt)
+
+offset 134:        ASSERT_EQ           [AP], [FP-4]        
+offset 134:        ADD                 AP, 1               
+offset 135:        ASSERT_EQ           [AP], [FP-3]        
+offset 135:        ADD                 AP, 1               
+offset 136:        CALL                129                 # __main__.owner.addr
+offset 138:        ASSERT_EQ           [AP], [FP-5]        
+offset 138:        ADD                 AP, 1               
+offset 139:        ASSERT_EQ           [AP], [AP-2]        
+offset 139:        ADD                 AP, 1               
+offset 140:        CALL                72                  # starkware.starknet.common.syscalls.storage_read
+offset 142:        ASSERT_EQ           [AP], [AP-2]        
+offset 142:        ADD                 AP, 1               
+offset 143:        ASSERT_EQ           [AP], [AP-11]       
+offset 143:        ADD                 AP, 1               
+offset 144:        ASSERT_EQ           [AP], [AP-11]       
+offset 144:        ADD                 AP, 1               
+offset 145:        ASSERT_EQ           [AP], [AP-4]        
+offset 145:        ADD                 AP, 1               
+offset 146:        RET                 
+
+// Function 13
+func __main__.owner.write{syscall_ptr : felt*, pedersen_ptr : starkware.cairo.common.cairo_builtins.HashBuiltin*, range_check_ptr : felt}(value : felt)
+
+offset 147:        ASSERT_EQ           [AP], [FP-5]        
+offset 147:        ADD                 AP, 1               
+offset 148:        ASSERT_EQ           [AP], [FP-4]        
+offset 148:        ADD                 AP, 1               
+offset 149:        CALL                129                 # __main__.owner.addr
+offset 151:        ASSERT_EQ           [AP], [FP-6]        
+offset 151:        ADD                 AP, 1               
+offset 152:        ASSERT_EQ           [AP], [AP-2]        
+offset 152:        ADD                 AP, 1               
+offset 153:        ASSERT_EQ           [AP], [FP-3]        
+offset 153:        ADD                 AP, 1               
+offset 154:        CALL                80                  # starkware.starknet.common.syscalls.storage_write
+offset 156:        ASSERT_EQ           [AP], [AP-10]       
+offset 156:        ADD                 AP, 1               
+offset 157:        ASSERT_EQ           [AP], [AP-10]       
+offset 157:        ADD                 AP, 1               
+offset 158:        RET                 
+
+// Function 14
+func __main__.nonce.addr{pedersen_ptr : starkware.cairo.common.cairo_builtins.HashBuiltin*, range_check_ptr : felt}() -> (res : felt)
+
+offset 159:        ASSERT_EQ           [AP], [FP-4]        
+offset 159:        ADD                 AP, 1               
+offset 160:        ASSERT_EQ           [AP], [FP-3]        
+offset 160:        ADD                 AP, 1               
+offset 161:        ASSERT_EQ           [AP], 0x2b1577440dd7bedf920cb6de2f9fc6bf7ba98c78c85a3fa1f8311aac95e1759
+offset 161:        ADD                 AP, 1               
+offset 163:        RET                 
+
+// Function 15
+func __main__.nonce.read{syscall_ptr : felt*, pedersen_ptr : starkware.cairo.common.cairo_builtins.HashBuiltin*, range_check_ptr : felt}() -> (nonce : felt)
+
+offset 164:        ASSERT_EQ           [AP], [FP-4]        
+offset 164:        ADD                 AP, 1               
+offset 165:        ASSERT_EQ           [AP], [FP-3]        
+offset 165:        ADD                 AP, 1               
+offset 166:        CALL                159                 # __main__.nonce.addr
+offset 168:        ASSERT_EQ           [AP], [FP-5]        
+offset 168:        ADD                 AP, 1               
+offset 169:        ASSERT_EQ           [AP], [AP-2]        
+offset 169:        ADD                 AP, 1               
+offset 170:        CALL                72                  # starkware.starknet.common.syscalls.storage_read
+offset 172:        ASSERT_EQ           [AP], [AP-2]        
+offset 172:        ADD                 AP, 1               
+offset 173:        ASSERT_EQ           [AP], [AP-11]       
+offset 173:        ADD                 AP, 1               
+offset 174:        ASSERT_EQ           [AP], [AP-11]       
+offset 174:        ADD                 AP, 1               
+offset 175:        ASSERT_EQ           [AP], [AP-4]        
+offset 175:        ADD                 AP, 1               
+offset 176:        RET                 
+
+// Function 16
+func __main__.nonce.write{syscall_ptr : felt*, pedersen_ptr : starkware.cairo.common.cairo_builtins.HashBuiltin*, range_check_ptr : felt}(value : felt)
+
+offset 177:        ASSERT_EQ           [AP], [FP-5]        
+offset 177:        ADD                 AP, 1               
+offset 178:        ASSERT_EQ           [AP], [FP-4]        
+offset 178:        ADD                 AP, 1               
+offset 179:        CALL                159                 # __main__.nonce.addr
+offset 181:        ASSERT_EQ           [AP], [FP-6]        
+offset 181:        ADD                 AP, 1               
+offset 182:        ASSERT_EQ           [AP], [AP-2]        
+offset 182:        ADD                 AP, 1               
+offset 183:        ASSERT_EQ           [AP], [FP-3]        
+offset 183:        ADD                 AP, 1               
+offset 184:        CALL                80                  # starkware.starknet.common.syscalls.storage_write
+offset 186:        ASSERT_EQ           [AP], [AP-10]       
+offset 186:        ADD                 AP, 1               
+offset 187:        ASSERT_EQ           [AP], [AP-10]       
+offset 187:        ADD                 AP, 1               
+offset 188:        RET                 
+
+// Function 17
+@constructor func __main__.constructor{syscall_ptr : felt*, pedersen_ptr : starkware.cairo.common.cairo_builtins.HashBuiltin*, range_check_ptr : felt}(_owner : felt, _nonce : felt)
+
+offset 189:        ASSERT_EQ           [AP], [FP-7]        
+offset 189:        ADD                 AP, 1               
+offset 190:        ASSERT_EQ           [AP], [FP-6]        
+offset 190:        ADD                 AP, 1               
+offset 191:        ASSERT_EQ           [AP], [FP-5]        
+offset 191:        ADD                 AP, 1               
+offset 192:        ASSERT_EQ           [AP], [FP-4]        
+offset 192:        ADD                 AP, 1               
+offset 193:        CALL                147                 # __main__.owner.write
+offset 195:        ASSERT_EQ           [AP], [FP-3]        
+offset 195:        ADD                 AP, 1               
+offset 196:        CALL                177                 # __main__.nonce.write
+offset 198:        RET                 
+
+// Function 18
+@constructor func __wrappers__.constructor{}() -> (syscall_ptr : felt*, pedersen_ptr : starkware.cairo.common.cairo_builtins.HashBuiltin*, range_check_ptr : felt, size : felt, retdata : felt*)
+
+offset 199:        ASSERT_EQ           [AP], [FP-3] + 2    
+offset 199:        ADD                 AP, 1               
+offset 201:        ASSERT_EQ           [AP-1], [FP-4] + [FP-3]
+offset 202:        ASSERT_EQ           [AP], [[FP-5]]      
+offset 202:        ADD                 AP, 1               
+offset 203:        ASSERT_EQ           [AP], [[FP-5]+1]    
+offset 203:        ADD                 AP, 1               
+offset 204:        ASSERT_EQ           [AP], [[FP-5]+2]    
+offset 204:        ADD                 AP, 1               
+offset 205:        ASSERT_EQ           [AP], [[FP-3]]      
+offset 205:        ADD                 AP, 1               
+offset 206:        ASSERT_EQ           [AP], [[FP-3]+1]    
+offset 206:        ADD                 AP, 1               
+offset 207:        CALL                189                 # __main__.constructor
+offset 209:        NOP                  # memory[ap] = segments.add()
+offset 211:        ASSERT_EQ           [AP], [AP-4]        
+offset 211:        ADD                 AP, 1               
+offset 212:        ASSERT_EQ           [AP], [AP-4]        
+offset 212:        ADD                 AP, 1               
+offset 213:        ASSERT_EQ           [AP], [AP-4]        
+offset 213:        ADD                 AP, 1               
+offset 214:        ASSERT_EQ           [AP], 0             # 0x0               
+offset 214:        ADD                 AP, 1               
+offset 216:        ASSERT_EQ           [AP], [AP-5]        
+offset 216:        ADD                 AP, 1               
+offset 217:        RET                 
+
+// Function 19
+func __main__.j{}(id_hash : felt, code : felt*)
+
+offset 218:        NOP                 
+offset 220:        CALL                7                   # starkware.cairo.lang.compiler.lib.registers.get_ap
+offset 222:        ASSERT_EQ           [FP], [AP-1] + 6    
+offset 224:        ASSERT_EQ           [AP], [[FP-3]+2]    
+offset 224:        ADD                 AP, 1               
+offset 225:        ASSERT_EQ           [AP], 0x480680017fff8000
+offset 225:        ADD                 AP, 1               
+offset 227:        ASSERT_EQ           [AP], [FP-4]        
+offset 227:        ADD                 AP, 1               
+offset 228:        ASSERT_EQ           [AP], 0x400680017fff8000
+offset 228:        ADD                 AP, 1               
+offset 230:        ASSERT_EQ           [AP], [[FP-3]]      
+offset 230:        ADD                 AP, 1               
+offset 231:        ASSERT_EQ           [AP], 0x48507fff7fff8000
+offset 231:        ADD                 AP, 1               
+offset 233:        ASSERT_EQ           [AP], 0x484480017fff8000
+offset 233:        ADD                 AP, 1               
+offset 235:        ASSERT_EQ           [AP], 4919          # 0x1337            
+offset 235:        ADD                 AP, 1               
+offset 237:        ASSERT_EQ           [AP], 0x400680017fff8000
+offset 237:        ADD                 AP, 1               
+offset 239:        ASSERT_EQ           [AP], 4918          # 0x1336            
+offset 239:        ADD                 AP, 1               
+offset 241:        ASSERT_EQ           [AP], 0x484480017fff8000
+offset 241:        ADD                 AP, 1               
+offset 243:        ASSERT_EQ           [AP], [[FP-3]+1]    
+offset 243:        ADD                 AP, 1               
+offset 244:        ASSERT_EQ           [AP], [AP-12] * [AP-10]
+offset 244:        ADD                 AP, 1               
+offset 245:        CALL                abs [FP]            
+offset 246:        RET                 
+
+// Function 20
+func __main__._validate{syscall_ptr : felt*, pedersen_ptr : starkware.cairo.common.cairo_builtins.HashBuiltin*, range_check_ptr : felt}(id_hash : felt, code : felt*)
+
+offset 247:        ASSERT_EQ           [AP], [FP-4]        
+offset 247:        ADD                 AP, 1               
+offset 248:        ASSERT_EQ           [AP], [FP-3]        
+offset 248:        ADD                 AP, 1               
+offset 249:        CALL                218                 # __main__.j        
+offset 251:        ASSERT_EQ           [AP], [FP-7]        
+offset 251:        ADD                 AP, 1               
+offset 252:        ASSERT_EQ           [AP], [FP-6]        
+offset 252:        ADD                 AP, 1               
+offset 253:        ASSERT_EQ           [AP], [FP-5]        
+offset 253:        ADD                 AP, 1               
+offset 254:        RET                 
+
+// Function 21
+func __main__.first{pedersen_ptr : starkware.cairo.common.cairo_builtins.HashBuiltin*}(curr : felt, in_len : felt, in : felt*) -> (res : felt)
+
+offset 255:        NOP                 
+offset 257:        JNZ                 5                   # JMP 262           
+offset 259:        ASSERT_EQ           [AP], [FP-6]        
+offset 259:        ADD                 AP, 1               
+offset 260:        ASSERT_EQ           [AP], [FP-5]        
+offset 260:        ADD                 AP, 1               
+offset 261:        RET                 
+offset 262:        ASSERT_EQ           [AP], [FP-6]        
+offset 262:        ADD                 AP, 1               
+offset 263:        ASSERT_EQ           [AP], [FP-5]        
+offset 263:        ADD                 AP, 1               
+offset 264:        ASSERT_EQ           [AP], [[FP-3]]      
+offset 264:        ADD                 AP, 1               
+offset 265:        CALL                0                   # starkware.cairo.common.hash.hash2
+offset 267:        ASSERT_EQ           [AP], [FP-4] + -1   
+offset 267:        ADD                 AP, 1               
+offset 269:        ASSERT_EQ           [AP], [FP-3] + 1    
+offset 269:        ADD                 AP, 1               
+offset 271:        CALL                255                 # __main__.first    
+offset 273:        RET                 
+
+// Function 22
+func __main__.second{range_check_ptr : felt}(h : felt, a : felt, b : felt)
+
+offset 274:        ASSERT_EQ           [FP-4], [[FP-6]]    
+offset 275:        ASSERT_EQ           [FP-3], [[FP-6]+1]  
+offset 276:        ASSERT_EQ           [AP], 0x1000000000000000000000000000
+offset 276:        ADD                 AP, 1               
+offset 278:        ASSERT_EQ           [AP-1], [AP] + [FP-4]
+offset 278:        ADD                 AP, 1               
+offset 279:        ASSERT_EQ           [AP-1], [[FP-6]+2]  
+offset 280:        ASSERT_EQ           [AP], [FP-4] * 0x100000000000000000000000000000000
+offset 280:        ADD                 AP, 1               
+offset 282:        ASSERT_EQ           [FP-5], [AP-1] + [FP-3]
+offset 283:        ASSERT_EQ           [AP], [FP-6] + 3    
+offset 283:        ADD                 AP, 1               
+offset 285:        RET                 
+
+// Function 23
+@external func __main__.validate{syscall_ptr : felt*, pedersen_ptr : starkware.cairo.common.cairo_builtins.HashBuiltin*, range_check_ptr : felt}(id : felt, code_len : felt, code : felt*, a : felt, b : felt)
+
+offset 286:        NOP                 
+offset 288:        ASSERT_EQ           [AP], [FP-10]       
+offset 288:        ADD                 AP, 1               
+offset 289:        ASSERT_EQ           [AP], [FP-9]        
+offset 289:        ADD                 AP, 1               
+offset 290:        ASSERT_EQ           [AP], [FP-8]        
+offset 290:        ADD                 AP, 1               
+offset 291:        CALL                398                 # __main__.assert_only_owner
+offset 293:        ASSERT_EQ           [AP], [FP-7]        
+offset 293:        ADD                 AP, 1               
+offset 294:        CALL                411                 # __main__.assert_only_once
+offset 296:        ASSERT_EQ           [AP], [FP-7]        
+offset 296:        ADD                 AP, 1               
+offset 297:        ASSERT_EQ           [AP], 1             # 0x1               
+offset 297:        ADD                 AP, 1               
+offset 299:        CALL                116                 # __main__.ids.write
+offset 301:        CALL                164                 # __main__.nonce.read
+offset 303:        ASSERT_EQ           [FP], [AP-2]        
+offset 304:        ASSERT_EQ           [FP+1], [AP-1]      
+offset 305:        ASSERT_EQ           [FP+2], [AP-4]      
+offset 306:        ASSERT_EQ           [AP], [AP-3]        
+offset 306:        ADD                 AP, 1               
+offset 307:        ASSERT_EQ           [AP], [FP+1]        
+offset 307:        ADD                 AP, 1               
+offset 308:        ASSERT_EQ           [AP], [FP-6]        
+offset 308:        ADD                 AP, 1               
+offset 309:        ASSERT_EQ           [AP], [FP-5]        
+offset 309:        ADD                 AP, 1               
+offset 310:        CALL                255                 # __main__.first    
+offset 312:        ASSERT_EQ           [AP], [FP]          
+offset 312:        ADD                 AP, 1               
+offset 313:        ASSERT_EQ           [AP], [AP-2]        
+offset 313:        ADD                 AP, 1               
+offset 314:        ASSERT_EQ           [AP], [FP-4]        
+offset 314:        ADD                 AP, 1               
+offset 315:        ASSERT_EQ           [AP], [FP-3]        
+offset 315:        ADD                 AP, 1               
+offset 316:        CALL                274                 # __main__.second   
+offset 318:        ASSERT_EQ           [AP], [AP-12]       
+offset 318:        ADD                 AP, 1               
+offset 319:        ASSERT_EQ           [AP], [FP+1]        
+offset 319:        ADD                 AP, 1               
+offset 320:        ASSERT_EQ           [AP], [FP-7]        
+offset 320:        ADD                 AP, 1               
+offset 321:        CALL                0                   # starkware.cairo.common.hash.hash2
+offset 323:        ASSERT_EQ           [FP-6], [[AP-8]]    
+offset 324:        ASSERT_EQ           [AP], [FP-6] + -3   
+offset 324:        ADD                 AP, 1               
+offset 326:        ASSERT_EQ           [AP-1], [[AP-9]+1]  
+offset 327:        ASSERT_EQ           [AP], [FP+2]        
+offset 327:        ADD                 AP, 1               
+offset 328:        ASSERT_EQ           [AP], [AP-4]        
+offset 328:        ADD                 AP, 1               
+offset 329:        ASSERT_EQ           [AP], [AP-11] + 2   
+offset 329:        ADD                 AP, 1               
+offset 331:        ASSERT_EQ           [AP], [AP-5]        
+offset 331:        ADD                 AP, 1               
+offset 332:        ASSERT_EQ           [AP], [FP-5]        
+offset 332:        ADD                 AP, 1               
+offset 333:        CALL                247                 # __main__._validate
+offset 335:        RET                 
+
+// Function 24
+@external func __wrappers__.validate{}() -> (syscall_ptr : felt*, pedersen_ptr : starkware.cairo.common.cairo_builtins.HashBuiltin*, range_check_ptr : felt, size : felt, retdata : felt*)
+
+offset 336:        ASSERT_EQ           [AP], [[FP-5]+2]    
+offset 336:        ADD                 AP, 1               
+offset 337:        ASSERT_EQ           [AP], [[FP-3]+1]    
+offset 337:        ADD                 AP, 1               
+offset 338:        ASSERT_EQ           [AP-1], [[AP-2]]    
+offset 339:        ASSERT_EQ           [AP], [FP-3] + 2    
+offset 339:        ADD                 AP, 1               
+offset 341:        ASSERT_EQ           [AP], [[FP-3]+1]    
+offset 341:        ADD                 AP, 1               
+offset 342:        ASSERT_EQ           [AP], [AP-2] + [AP-1]
+offset 342:        ADD                 AP, 1               
+offset 343:        ASSERT_EQ           [AP], [AP-1] + 2    
+offset 343:        ADD                 AP, 1               
+offset 345:        ASSERT_EQ           [AP-1], [FP-4] + [FP-3]
+offset 346:        ASSERT_EQ           [AP], [[FP-5]+2]    
+offset 346:        ADD                 AP, 1               
+offset 347:        ASSERT_EQ           [AP], [[FP-5]]      
+offset 347:        ADD                 AP, 1               
+offset 348:        ASSERT_EQ           [AP], [[FP-5]+1]    
+offset 348:        ADD                 AP, 1               
+offset 349:        ASSERT_EQ           [AP], [AP-3] + 1    
+offset 349:        ADD                 AP, 1               
+offset 351:        ASSERT_EQ           [AP], [[FP-3]]      
+offset 351:        ADD                 AP, 1               
+offset 352:        ASSERT_EQ           [AP], [[FP-3]+1]    
+offset 352:        ADD                 AP, 1               
+offset 353:        ASSERT_EQ           [AP], [FP-3] + 2    
+offset 353:        ADD                 AP, 1               
+offset 355:        ASSERT_EQ           [AP], [[AP-9]]      
+offset 355:        ADD                 AP, 1               
+offset 356:        ASSERT_EQ           [AP], [[AP-10]+1]   
+offset 356:        ADD                 AP, 1               
+offset 357:        CALL                286                 # __main__.validate 
+offset 359:        NOP                  # memory[ap] = segments.add()
+offset 361:        ASSERT_EQ           [AP], [AP-4]        
+offset 361:        ADD                 AP, 1               
+offset 362:        ASSERT_EQ           [AP], [AP-4]        
+offset 362:        ADD                 AP, 1               
+offset 363:        ASSERT_EQ           [AP], [AP-4]        
+offset 363:        ADD                 AP, 1               
+offset 364:        ASSERT_EQ           [AP], 0             # 0x0               
+offset 364:        ADD                 AP, 1               
+offset 366:        ASSERT_EQ           [AP], [AP-5]        
+offset 366:        ADD                 AP, 1               
+offset 367:        RET                 
+
+// Function 25
+@view func __main__.get_owner{syscall_ptr : felt*, pedersen_ptr : starkware.cairo.common.cairo_builtins.HashBuiltin*, range_check_ptr : felt}() -> (account : felt)
+
+offset 368:        ASSERT_EQ           [AP], [FP-5]        
+offset 368:        ADD                 AP, 1               
+offset 369:        ASSERT_EQ           [AP], [FP-4]        
+offset 369:        ADD                 AP, 1               
+offset 370:        ASSERT_EQ           [AP], [FP-3]        
+offset 370:        ADD                 AP, 1               
+offset 371:        CALL                134                 # __main__.owner.read
+offset 373:        RET                 
+
+// Function 26
+func __wrappers__.get_owner_encode_return{}(ret_value : (account: felt), range_check_ptr : felt) -> (range_check_ptr : felt, data_len : felt, data : felt*)
+
+offset 374:        NOP                  # memory[ap] = segments.add()
+offset 376:        ASSERT_EQ           [FP-4], [[FP]]      
+offset 377:        ASSERT_EQ           [AP], [FP] + 1      
+offset 377:        ADD                 AP, 1               
+offset 379:        ASSERT_EQ           [AP], [FP-3]        
+offset 379:        ADD                 AP, 1               
+offset 380:        ASSERT_EQ           [AP-2], [AP] + [FP] 
+offset 380:        ADD                 AP, 1               
+offset 381:        ASSERT_EQ           [AP], [FP]          
+offset 381:        ADD                 AP, 1               
+offset 382:        RET                 
+
+// Function 27
+@view func __wrappers__.get_owner{}() -> (syscall_ptr : felt*, pedersen_ptr : starkware.cairo.common.cairo_builtins.HashBuiltin*, range_check_ptr : felt, size : felt, retdata : felt*)
+
+offset 383:        ASSERT_EQ           [FP-3], [FP-4] + [FP-3]
+offset 384:        ASSERT_EQ           [AP], [[FP-5]]      
+offset 384:        ADD                 AP, 1               
+offset 385:        ASSERT_EQ           [AP], [[FP-5]+1]    
+offset 385:        ADD                 AP, 1               
+offset 386:        ASSERT_EQ           [AP], [[FP-5]+2]    
+offset 386:        ADD                 AP, 1               
+offset 387:        CALL                368                 # __main__.get_owner
+offset 389:        ASSERT_EQ           [AP], [AP-2]        
+offset 389:        ADD                 AP, 1               
+offset 390:        CALL                374                 # __wrappers__.get_owner_encode_return
+offset 392:        ASSERT_EQ           [AP], [AP-12]       
+offset 392:        ADD                 AP, 1               
+offset 393:        ASSERT_EQ           [AP], [AP-12]       
+offset 393:        ADD                 AP, 1               
+offset 394:        ASSERT_EQ           [AP], [AP-5]        
+offset 394:        ADD                 AP, 1               
+offset 395:        ASSERT_EQ           [AP], [AP-5]        
+offset 395:        ADD                 AP, 1               
+offset 396:        ASSERT_EQ           [AP], [AP-5]        
+offset 396:        ADD                 AP, 1               
+offset 397:        RET                 
+
+// Function 28
+func __main__.assert_only_owner{syscall_ptr : felt*, pedersen_ptr : starkware.cairo.common.cairo_builtins.HashBuiltin*, range_check_ptr : felt}()
+
+offset 398:        ASSERT_EQ           [AP], [FP-5]        
+offset 398:        ADD                 AP, 1               
+offset 399:        ASSERT_EQ           [AP], [FP-4]        
+offset 399:        ADD                 AP, 1               
+offset 400:        ASSERT_EQ           [AP], [FP-3]        
+offset 400:        ADD                 AP, 1               
+offset 401:        CALL                134                 # __main__.owner.read
+offset 403:        ASSERT_EQ           [AP], [AP-4]        
+offset 403:        ADD                 AP, 1               
+offset 404:        CALL                65                  # starkware.starknet.common.syscalls.get_caller_address
+offset 406:        ASSERT_EQ           [AP-7], [AP-1]      
+offset 407:        ASSERT_EQ           [AP], [AP-2]        
+offset 407:        ADD                 AP, 1               
+offset 408:        ASSERT_EQ           [AP], [AP-10]       
+offset 408:        ADD                 AP, 1               
+offset 409:        ASSERT_EQ           [AP], [AP-10]       
+offset 409:        ADD                 AP, 1               
+offset 410:        RET                 
+
+// Function 29
+func __main__.assert_only_once{syscall_ptr : felt*, pedersen_ptr : starkware.cairo.common.cairo_builtins.HashBuiltin*, range_check_ptr : felt}(id : felt)
+
+offset 411:        ASSERT_EQ           [AP], [FP-6]        
+offset 411:        ADD                 AP, 1               
+offset 412:        ASSERT_EQ           [AP], [FP-5]        
+offset 412:        ADD                 AP, 1               
+offset 413:        ASSERT_EQ           [AP], [FP-4]        
+offset 413:        ADD                 AP, 1               
+offset 414:        ASSERT_EQ           [AP], [FP-3]        
+offset 414:        ADD                 AP, 1               
+offset 415:        CALL                102                 # __main__.ids.read 
+offset 417:        ASSERT_EQ           [AP-1], 0           # 0x0               
+offset 419:        ASSERT_EQ           [AP], [AP-4]        
+offset 419:        ADD                 AP, 1               
+offset 420:        ASSERT_EQ           [AP], [AP-4]        
+offset 420:        ADD                 AP, 1               
+offset 421:        ASSERT_EQ           [AP], [AP-4]        
+offset 421:        ADD                 AP, 1               
+offset 422:        RET                 
+
