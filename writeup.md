@@ -62,7 +62,7 @@ Here, I list all of the tools that I used throughout the challenge.
 
 The introduction announcement includes a link to an NFT [on OpenSea](https://testnets.opensea.io/assets/goerli/0x43F99c5517928be62935A1d7714408fae90d1896/1), which depicts a [cute dog wearing a lobster costume and pastry chef hat](chall/stage0/nft.png). Checking the contract [on Etherscan](https://goerli.etherscan.io/address/0x43f99c5517928be62935a1d7714408fae90d1896), we see two files, [ERC1155.sol](chall/stage0/ERC1155.sol) and [TroisPainsZeroJNF.sol](chall/stage0/TroisPainsZeroJNF.sol). In TroisPainsZeroJNF.sol, we see this:
 
-```
+```js
 string constant BASE_URI =
     'data:application/json;base64,eyJuYW1lIjogIlRyb2lzIFBhaW5zIFplcm8iLAogICAgICAgICAgImRlc2NyaXB0aW9uIjogIkxvYnN0ZXJkb2cgcGFzdHJ5IGNoZWYuIiwKICAgICAgICAgICJpbWFnZSI6ICJodHRwczovL25mdC5xdWF0cmUtcXUuYXJ0L25mdC1saWJyYXJ5LnBocD9pZD0xMiIsCiAgICAgICAgICAiZXh0ZXJuYWxfdXJsIjogImh0dHBzOi8vbmZ0LnF1YXRyZS1xdS5hcnQvbmZ0LWxpYnJhcnkucGhwP2lkPTEyIn0K';
 ```
@@ -76,7 +76,7 @@ This base64 blob decodes to
           "external_url": "https://nft.quatre-qu.art/nft-library.php?id=12"}
 ```
 
-Indeed, if we visit [the URL](https://nft.quatre-qu.art/nft-library.php?id=12), we get an SVG showing the lobster dog. Checking the other IDs, we find that [ID #1](https://nft.quatre-qu.art/nft-library.php?id=1) contains [a flag](chall/stage0/1.svg)! Stage 0 done.
+Indeed, if we visit [the URL](https://nft.quatre-qu.art/nft-library.php?id=12), we get an SVG showing the lobster dog. Checking the other IDs, we find that [ID #1](https://nft.quatre-qu.art/nft-library.php?id=1) contains [a flag](chall/stage0/1.svg): `SSTIC{6a4ec745c1403b1ebf09fbd5a3021d1226330197641d4f65008ba0cd0fe48c62}`! Stage 0 done.
 
 ## Stage 1
 
@@ -451,13 +451,13 @@ In Starknet, contracts are instances of "classes" which contain various methods.
 
 In block 0, we see several declare and deploy transactions which are just setting up the blockchain. In block 1, we see a declare transaction from the owner address, which must be from `declare(contract_path)`:
 
-```
+```python
 GatewayBlock(block_hash=317866964754535706263923812865832811423410116157953196330630931923377413982, parent_block_hash=0, block_number=1, status=<BlockStatus.ACCEPTED_ON_L2: 'ACCEPTED_ON_L2'>, root=0, transactions=[DeclareTransaction(hash=3440807715028016891804779965211962369733847722932724852814236161050082652231, signature=[88564440593701894607622686113046728521206879255368231646118140764699840103, 1863394593932243685906713432119313992970855211084845089406309452755165604582], max_fee=10000000000000000, version=1, class_hash=850987241191385873857281644945472963972949967069463868452254135667905505665, sender_address=2227792261936986457068241964193682344855759612155192788502855599627020634957, nonce=0)], timestamp=1680287345, gas_price=100000000000)
 ```
 
 This suggests that `class_hash=850987241191385873857281644945472963972949967069463868452254135667905505665` is our validation contract class. In the very next transaction, we see an invoke transaction:
 
-```
+```python
 GatewayBlock(block_hash=1799568260676998479121015811259037913464816982030411987336407540847698027208, parent_block_hash=317866964754535706263923812865832811423410116157953196330630931923377413982, block_number=2, status=<BlockStatus.ACCEPTED_ON_L2: 'ACCEPTED_ON_L2'>, root=0, transactions=[InvokeTransaction(hash=121199570675411142353603730900706315166332311680999986404439172613254399361, signature=[3549921394086265753849997764874797739628619656917898513407059625568914435990, 782026284205841696856660162831378873992041327653219396756491426159406085101], max_fee=10000000000000000, version=1, contract_address=2227792261936986457068241964193682344855759612155192788502855599627020634957, calldata=[1, 1856023862266384134850882267771223226463012388454055972213556707067276624575, 721734516881566113991739060234943946737358742400686720027155767807930563645, 0, 6, 6, 850987241191385873857281644945472963972949967069463868452254135667905505665, 4919, 0, 2, 2227792261936986457068241964193682344855759612155192788502855599627020634957, 121485921437276981477059375547635758552], entry_point_selector=None, nonce=1)], timestamp=1680287348, gas_price=100000000000)
 ```
 
@@ -536,9 +536,159 @@ offset 335:        RET
 
 ### Reversing the contract
 
-Cairo, the programming language for Starknet contracts, runs on a bit of a "weird" virtual machine. The [official tutorial](https://www.cairo-lang.org/docs/how_cairo_works/cairo_intro.html) provides a nice introduction to the language and machine. In this VM, there is a single data type called `felt` ("field element"), which is an integer modulo some prime. For our contract, that prime is 0x800000000000011000000000000000000000000000000000000000000000001. There are three registers, `AP`, `FP` and `PC`, and an unbounded array of *write-once* memory cells, each capable of holding a single `felt`. The instruction `ASSERT_EQ` functions as both an assertion and as an assignment operator: a Cairo program is only accepted if the runtime can prove that *some* assignment of memory cells passes every `ASSERT_EQ` check, so a statement like `ASSERT_EQ [AP], [FP-7]` has the effect of setting the memory cell at `[AP]` to be equal to `[FP-7]`. The `AP` register is an "allocation pointer" which indexes the memory and only increments; it functions kind of like a stack pointer for a stack that only pushes and never pops. The `FP` register is a frame pointer which points to the current "stack" frame and which is updated on `CALL`. Thus, for the most part, you can read `ASSERT_EQ [AP], X; ADD AP, 1` as effectively `PUSH X`.
+Cairo, the programming language for Starknet contracts, runs on a bit of a "weird" virtual machine. The [official tutorial](https://www.cairo-lang.org/docs/how_cairo_works/cairo_intro.html) provides a nice introduction to the language and machine. In this VM, there is a single data type called `felt` ("field element"), which is an integer modulo some prime. For our contract, that prime is 0x800000000000011000000000000000000000000000000000000000000000001. There are three registers, `AP`, `FP` and `PC`, and an unbounded array of *write-once* memory cells, each capable of holding a single `felt`. The instruction `ASSERT_EQ` functions as both an assertion and as an assignment operator: a Cairo program is only accepted if the runtime can prove that *some* assignment of memory cells passes every `ASSERT_EQ` check, so a statement like `ASSERT_EQ [AP], [FP-7]` has the effect of setting the memory cell at `[AP]` to be equal to `[FP-7]`. The `AP` register is an "allocation pointer" which indexes the memory and only increments; it functions kind of like a stack pointer for a stack that only pushes and never pops. The `FP` register is a frame pointer which points to the current "stack" frame and which is updated on `CALL`. The `PC` register is the program counter, updated on every instruction executed. `CALL` pushes two values: the old `FP` and the return `PC`. For the most part, you can read `ASSERT_EQ [AP], X; ADD AP, 1` as effectively `PUSH X`.
 
-System calls and built-in library calls are also handled somewhat unusually. 
+Built-in functions, which provide functionality like hashing and persistent storage, are also handled somewhat unusually. They are handled via a form of memory-mapped I/O, in which a predefined range of memory addresses can be read or written to trigger the functionality. For example, the `HashBuiltin` call takes two inputs and produces one output, for a total of three memory addresses. However, since Cairo memory is write-once, instead of using a single block of e.g. three addresses, there are instead a large number of use-once *instances* - consecutive blocks of memory which can each be used to invoke the function once. This requires maintaining a pointer to the first unused instance, for each built-in function that the program uses: the pointer will be passed to a function that uses it, increments it, and then returns the new value.
+
+I initially started by looking at Thoth's [decompilation](files/stage3/program.cairo), but the code was confusing and hard to understand, and the decompiled code did not make sense in parts. Instead, I dove right in with the disassembly, after lightly [cleaning it up](files/stage3/program.annotated.txt) and annotating the various `PUSH`s with what is being pushed. The code winds up looking like this:
+
+```
+// Function 21
+func __main__.first{pedersen_ptr @ [FP-6] : starkware.cairo.common.cairo_builtins.HashBuiltin*}(curr @ [FP-5] : felt, in_len @ [FP-4] : felt, in @ [FP-3] : felt*) -> (res : felt)
+
+offset 255:        NOP                 
+offset 257:        JNZ                 5                   # JMP 262           
+offset 259:        PUSH                [FP-6]        # pedersen_ptr
+offset 260:        PUSH                [FP-5]        # curr
+offset 261:        RET                 
+offset 262:        PUSH                [FP-6]        # pedersen_ptr
+offset 263:        PUSH                [FP-5]        # curr
+offset 264:        PUSH                [[FP-3]]      # *in
+offset 265:        CALL                0                   # starkware.cairo.common.hash.hash2
+offset 267:        PUSH                [FP-4] + -1   # in_len - 1
+offset 269:        PUSH                [FP-3] + 1    # in + 1
+offset 271:        CALL                255                 # __main__.first    
+offset 273:        RET                 
+```
+
+Reversing everything to pseudocode, we get something like this:
+
+```
+func first(curr: felt, in_len: felt, in: felt*) -> (res: felt) {
+    if (in_len == 0) {
+        return curr;
+    }
+    result = hash2(curr, *in);
+    return first(result, in_len - 1, in + 1);
+}
+
+func second(h: felt, a: felt, b: felt) {
+    range_check(a);
+    range_check(b);
+    range_check(0x1000000000000000000000000000 - a);
+    assert(h == a * 0x100000000000000000000000000000000 + b);
+}
+
+func _validate(id_hash: felt, code: felt*) {
+    j(id_hash, code);
+}
+
+func validate(id: felt, code_len: felt, code: felt*, a: felt, b: felt) {
+    assert_only_owner();
+    assert_only_once(id);
+    ids.write(id, 1);
+    nonce = nonce.read();
+    res = first(nonce, code_len, code);
+    second(res, a, b);
+    id_hash = hash2(nonce, id);
+    range_check(code_len);
+    range_check(code_len - 3);
+    _validate(id_hash, code);
+}
+```
+
+`hash2` and `range_check` are built-in functions. `hash2` performs a [Pedersen hash](https://docs.starknet.io/documentation/architecture_and_concepts/Hashing/hash-functions/#pedersen_hash), while `range_check` asserts that its input is in $[0, 2^{128})$. 
+This code is pretty straightforward to understand. `first` hashes the entire code by recursively applying `hash2` with each element. `second` checks that $a < 2^{108}$, $b < 2^{128}$, and that they combine to form the hash from `first`. Notably, `hash2` produces a 252-bit hash, but `second` effectively requires $h < 2^{236}$, so some bruteforcing will be needed to achieve a small enough hash. Finally, `validate` will check that `code_len >= 3`, and feed the code and a hash of the ID into `_validate`, which directly calls the mysterious `j` function.
+
+`j` looks like this:
+
+```
+// Function 19
+func __main__.j{}(id_hash @ [FP-4] : felt, code @ [FP-3] : felt*)
+
+offset 218:        NOP                 
+offset 220:        CALL                7                   # starkware.cairo.lang.compiler.lib.registers.get_ap
+offset 222:        ASSERT_EQ           [FP], [AP-1] + 6    # storing get_ap result
+offset 224:        PUSH                [[FP-3]+2]          # code[2]
+offset 225:        PUSH                0x480680017fff8000 
+offset 227:        PUSH                [FP-4]              # id_hash
+offset 228:        PUSH                0x400680017fff8000
+offset 230:        PUSH                [[FP-3]]            # code[0]
+offset 231:        PUSH                0x48507fff7fff8000
+offset 233:        PUSH                0x484480017fff8000
+offset 235:        PUSH                4919                # 0x1337
+offset 237:        PUSH                0x400680017fff8000
+offset 239:        PUSH                4918                # 0x1336
+offset 241:        PUSH                0x484480017fff8000
+offset 243:        PUSH                [[FP-3]+1]          # code[1]
+offset 244:        PUSH                [AP-12] * [AP-10]   # id_hash * code[2]
+offset 245:        CALL                abs [FP]            
+offset 246:        RET                 
+```
+
+This is very strange-looking. `get_ap` gets a pointer to the top of the "stack". Then, a bunch of strange values are pushed, followed by **`CALL abs [FP]`**: the program jumps into the stack! This is basically dynamically generated code (Cairo shellcode?). Luckily, it's not super complicated to disassemble this; I basically invented dummy values for all the variables, overwrote a chunk of `j`'s code in the `program.json` file, and disassembled it again with Thoth:
+
+```
+offset 218:        PUSH                <id_hash>          # 0xaaaaaaaa        
+offset 220:        ASSERT_EQ           [AP], <code[0]>    # 0xbbbbbbbb        
+offset 222:        ASSERT_EQ           [AP], [AP-1] * [AP-1]
+offset 222:        ADD                 AP, 1               
+offset 223:        PUSH                [AP-1] * 4919 
+offset 225:        ASSERT_EQ           [AP], 4918          # 0x1336            
+offset 227:        ASSERT_EQ           [AP], [AP-1] * <code[1]>
+offset 227:        ADD                 AP, 1               
+offset 229:        dw <id_hash * code[2]>       
+```
+
+This tells us that we require `code[0] == id_hash * id_hash`, `0x1336 == code[1] * code[0] * 0x1337` and `code[2] * id_hash == <RET instruction>`. We see that a RET is `0x208b7fff7fff7ffe`, so this leads to the following set of constraints:
+
+```
+code[0] = id_hash * id_hash
+code[1] = 0x1336 / (code[0] * 0x1337)
+code[2] = 0x208b7fff7fff7ffe / id_hash
+```
+
+where all math is performed in $\mathbb{Z}_{p}$.
+
+With all of these constraints figured out, all that's left is to code a [coupon generator](files/stage3/make_coupon.py):
+
+```python
+from starkware.crypto.signature.fast_pedersen_hash import pedersen_hash
+import random
+
+hash2 = pedersen_hash
+nonce = 121485921437276981477059375547635758552
+prime = 0x800000000000011000000000000000000000000000000000000000000000001
+id = random.getrandbits(128)
+id_hash = hash2(nonce, id)
+code = [None] * 4
+code[0] = pow(id_hash, 2, prime)
+code[1] = 0x1336 * pow(code[0] * 0x1337, -1, prime) % prime
+code[2] = 0x208b7fff7fff7ffe * pow(id_hash, -1, prime) % prime
+h = hash2(hash2(hash2(nonce, code[0]), code[1]), code[2])
+for i in range(10000000):
+    if i % 100 == 0: print("...", i)
+    code[3] = random.getrandbits(128)
+    h2 = hash2(h, code[3])
+    if h2 < (1<<236):
+        break
+
+print("%x" % id)
+print(",".join(["%x" % c for c in code]))
+print("%x" % (h2 >> 128))
+print("%x" % (h2 & ((1<<128)-1)))
+```
+
+Although it is a bit slow (up to a few minutes), it does eventually spit out a [valid coupon](files/stage3/coupon.txt):
+
+```
+dfa771ad69f9eb10ecc0145e6f0eda46
+30ecd409726aedda4824dd82b3a097c0576a956758961685e8dd1df289b2332,2715ed373a70b43e6c721e5b52a55710b749e33c85f8ed1a0832ad3c48e5d16,4533ecbe1beb5d0c1685622bcc5b284753eefb1b58cfcd1df346722cdbc1338,7defca6eea882693c2d8c82e14019363
+1975c230897189069de7abf2e9b
+329eb85f573b21a9fbc2aa4169f129ca
+```
+
+Entering this coupon into the website works, and gives us the stage 3 flag `SSTIC{408656932b4982e58600bc58c73ee09c9ceb170325de207fabc73801fbf67f0f}`!
 
 ## Final Stage
 

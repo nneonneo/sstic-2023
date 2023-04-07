@@ -728,7 +728,7 @@ offset 161:        PUSH                0x2b1577440dd7bedf920cb6de2f9fc6bf7ba98c7
 offset 163:        RET                 
 
 // Function 15
-func __main__.nonce.read{syscall_ptr : felt*, pedersen_ptr : starkware.cairo.common.cairo_builtins.HashBuiltin*, range_check_ptr : felt}() -> (nonce : felt)
+func __main__.nonce.read{syscall_ptr @ [FP-5] : felt*, pedersen_ptr @ [FP-4] : starkware.cairo.common.cairo_builtins.HashBuiltin*, range_check_ptr @ [FP-3] : felt}() -> (nonce : felt)
 
 offset 164:        PUSH                [FP-4]        
 offset 165:        PUSH                [FP-3]        
@@ -736,10 +736,10 @@ offset 166:        CALL                159                 # __main__.nonce.addr
 offset 168:        PUSH                [FP-5]        
 offset 169:        PUSH                [AP-2]        
 offset 170:        CALL                72                  # starkware.starknet.common.syscalls.storage_read
-offset 172:        PUSH                [AP-2]        
-offset 173:        PUSH                [AP-11]       
-offset 174:        PUSH                [AP-11]       
-offset 175:        PUSH                [AP-4]        
+offset 172:        PUSH                [AP-2]        # syscall_ptr
+offset 173:        PUSH                [AP-11]       # pedersen_ptr
+offset 174:        PUSH                [AP-11]       # range_check_ptr
+offset 175:        PUSH                [AP-4]        # nonce
 offset 176:        RET                 
 
 // Function 16
@@ -788,108 +788,108 @@ offset 216:        PUSH                [AP-5]
 offset 217:        RET                 
 
 // Function 19
-func __main__.j{}(id_hash : felt, code : felt*)
+func __main__.j{}(id_hash @ [FP-4] : felt, code @ [FP-3] : felt*)
 
 offset 218:        NOP                 
 offset 220:        CALL                7                   # starkware.cairo.lang.compiler.lib.registers.get_ap
-offset 222:        ASSERT_EQ           [FP], [AP-1] + 6    
-offset 224:        PUSH                [[FP-3]+2]    
-offset 225:        PUSH                0x480680017fff8000
-offset 227:        PUSH                [FP-4]        
+offset 222:        ASSERT_EQ           [FP], [AP-1] + 6    # storing get_ap result
+offset 224:        PUSH                [[FP-3]+2]          # code[2]
+offset 225:        PUSH                0x480680017fff8000 
+offset 227:        PUSH                [FP-4]              # id_hash
 offset 228:        PUSH                0x400680017fff8000
-offset 230:        PUSH                [[FP-3]]      
+offset 230:        PUSH                [[FP-3]]            # code[0]
 offset 231:        PUSH                0x48507fff7fff8000
 offset 233:        PUSH                0x484480017fff8000
 offset 235:        PUSH                4919                # 0x1337
 offset 237:        PUSH                0x400680017fff8000
 offset 239:        PUSH                4918                # 0x1336
 offset 241:        PUSH                0x484480017fff8000
-offset 243:        PUSH                [[FP-3]+1]    
-offset 244:        PUSH                [AP-12] * [AP-10]
+offset 243:        PUSH                [[FP-3]+1]          # code[1]
+offset 244:        PUSH                [AP-12] * [AP-10]   # id_hash * code[2]
 offset 245:        CALL                abs [FP]            
 offset 246:        RET                 
 
 // Function 20
-func __main__._validate{syscall_ptr : felt*, pedersen_ptr : starkware.cairo.common.cairo_builtins.HashBuiltin*, range_check_ptr : felt}(id_hash : felt, code : felt*)
+func __main__._validate{syscall_ptr @ [FP-7] : felt*, pedersen_ptr @ [FP-6] : starkware.cairo.common.cairo_builtins.HashBuiltin*, range_check_ptr @ [FP-5] : felt}(id_hash @ [FP-4] : felt, code @ [FP-3] : felt*)
 
-offset 247:        PUSH                [FP-4]        
-offset 248:        PUSH                [FP-3]        
+offset 247:        PUSH                [FP-4]        # id_hash
+offset 248:        PUSH                [FP-3]        # code
 offset 249:        CALL                218                 # __main__.j        
-offset 251:        PUSH                [FP-7]        
-offset 252:        PUSH                [FP-6]        
-offset 253:        PUSH                [FP-5]        
+offset 251:        PUSH                [FP-7]        # syscall_ptr
+offset 252:        PUSH                [FP-6]        # pedersen_ptr
+offset 253:        PUSH                [FP-5]        # range_check_ptr
 offset 254:        RET                 
 
 // Function 21
-func __main__.first{pedersen_ptr : starkware.cairo.common.cairo_builtins.HashBuiltin*}(curr : felt, in_len : felt, in : felt*) -> (res : felt)
+func __main__.first{pedersen_ptr @ [FP-6] : starkware.cairo.common.cairo_builtins.HashBuiltin*}(curr @ [FP-5] : felt, in_len @ [FP-4] : felt, in @ [FP-3] : felt*) -> (res : felt)
 
 offset 255:        NOP                 
 offset 257:        JNZ                 5                   # JMP 262           
-offset 259:        PUSH                [FP-6]        
-offset 260:        PUSH                [FP-5]        
+offset 259:        PUSH                [FP-6]        # pedersen_ptr
+offset 260:        PUSH                [FP-5]        # curr
 offset 261:        RET                 
-offset 262:        PUSH                [FP-6]        
-offset 263:        PUSH                [FP-5]        
-offset 264:        PUSH                [[FP-3]]      
+offset 262:        PUSH                [FP-6]        # pedersen_ptr
+offset 263:        PUSH                [FP-5]        # curr
+offset 264:        PUSH                [[FP-3]]      # *in
 offset 265:        CALL                0                   # starkware.cairo.common.hash.hash2
-offset 267:        PUSH                [FP-4] + -1   
-offset 269:        PUSH                [FP-3] + 1    
+offset 267:        PUSH                [FP-4] + -1   # in_len - 1
+offset 269:        PUSH                [FP-3] + 1    # in + 1
 offset 271:        CALL                255                 # __main__.first    
 offset 273:        RET                 
 
 // Function 22
-func __main__.second{range_check_ptr : felt}(h : felt, a : felt, b : felt)
+func __main__.second{range_check_ptr @ [FP-6] : felt}(h @ [FP-5] : felt, a @ [FP-4] : felt, b @ [FP-3] : felt)
 
-offset 274:        ASSERT_EQ           [FP-4], [[FP-6]]    
-offset 275:        ASSERT_EQ           [FP-3], [[FP-6]+1]  
+offset 274:        ASSERT_EQ           [FP-4], [[FP-6]]    # *range_check_ptr = a
+offset 275:        ASSERT_EQ           [FP-3], [[FP-6]+1]  # *(range_check_ptr+1) = b
 offset 276:        PUSH                0x1000000000000000000000000000
-offset 278:        ASSERT_EQ           [AP-1], [AP] + [FP-4]
+offset 278:        ASSERT_EQ           [AP-1], [AP] + [FP-4] # push(0x1000000000000000000000000000 - a)
 offset 278:        ADD                 AP, 1               
-offset 279:        ASSERT_EQ           [AP-1], [[FP-6]+2]  
+offset 279:        ASSERT_EQ           [AP-1], [[FP-6]+2]   # *(range_check_ptr+2) = 0x1000000000000000000000000000 - a
 offset 280:        PUSH                [FP-4] * 0x100000000000000000000000000000000
-offset 282:        ASSERT_EQ           [FP-5], [AP-1] + [FP-3]
-offset 283:        PUSH                [FP-6] + 3    
+offset 282:        ASSERT_EQ           [FP-5], [AP-1] + [FP-3] # assert h == a * 0x100000000000000000000000000000000 + b
+offset 283:        PUSH                [FP-6] + 3          # range_check_ptr + 3
 offset 285:        RET                 
 
 // Function 23
-@external func __main__.validate{syscall_ptr : felt*, pedersen_ptr : starkware.cairo.common.cairo_builtins.HashBuiltin*, range_check_ptr : felt}(id : felt, code_len : felt, code : felt*, a : felt, b : felt)
+@external func __main__.validate{syscall_ptr @ [FP-10] : felt*, pedersen_ptr @ [FP-9] : starkware.cairo.common.cairo_builtins.HashBuiltin*, range_check_ptr @ [FP-8] : felt}(id @ [FP-7] : felt, code_len @ [FP-6] : felt, code @ [FP-5] : felt*, a @ [FP-4] : felt, b @ [FP-3] : felt)
 
 offset 286:        NOP                 
-offset 288:        PUSH                [FP-10]       
-offset 289:        PUSH                [FP-9]        
-offset 290:        PUSH                [FP-8]        
+offset 288:        PUSH                [FP-10]       # syscall_ptr
+offset 289:        PUSH                [FP-9]        # pedersen_ptr
+offset 290:        PUSH                [FP-8]        # range_check_ptr
 offset 291:        CALL                398                 # __main__.assert_only_owner
-offset 293:        PUSH                [FP-7]        
+offset 293:        PUSH                [FP-7]        # id
 offset 294:        CALL                411                 # __main__.assert_only_once
-offset 296:        PUSH                [FP-7]        
+offset 296:        PUSH                [FP-7]        # id
 offset 297:        PUSH                1                   # 0x1
 offset 299:        CALL                116                 # __main__.ids.write
 offset 301:        CALL                164                 # __main__.nonce.read
-offset 303:        ASSERT_EQ           [FP], [AP-2]        
-offset 304:        ASSERT_EQ           [FP+1], [AP-1]      
-offset 305:        ASSERT_EQ           [FP+2], [AP-4]      
-offset 306:        PUSH                [AP-3]        
-offset 307:        PUSH                [FP+1]        
-offset 308:        PUSH                [FP-6]        
-offset 309:        PUSH                [FP-5]        
+offset 303:        ASSERT_EQ           [FP], [AP-2]  # range_check_ptr
+offset 304:        ASSERT_EQ           [FP+1], [AP-1]# nonce
+offset 305:        ASSERT_EQ           [FP+2], [AP-4]# syscall_ptr
+offset 306:        PUSH                [AP-3]        # pedersen_ptr
+offset 307:        PUSH                [FP+1]        # nonce
+offset 308:        PUSH                [FP-6]        # code_len
+offset 309:        PUSH                [FP-5]        # code
 offset 310:        CALL                255                 # __main__.first    
-offset 312:        PUSH                [FP]          
-offset 313:        PUSH                [AP-2]        
-offset 314:        PUSH                [FP-4]        
-offset 315:        PUSH                [FP-3]        
+offset 312:        PUSH                [FP]          # range_check_ptr
+offset 313:        PUSH                [AP-2]        # res
+offset 314:        PUSH                [FP-4]        # a
+offset 315:        PUSH                [FP-3]        # b
 offset 316:        CALL                274                 # __main__.second   
-offset 318:        PUSH                [AP-12]       
-offset 319:        PUSH                [FP+1]        
-offset 320:        PUSH                [FP-7]        
+offset 318:        PUSH                [AP-12]       # pedersen_ptr
+offset 319:        PUSH                [FP+1]        # nonce
+offset 320:        PUSH                [FP-7]        # id
 offset 321:        CALL                0                   # starkware.cairo.common.hash.hash2
-offset 323:        ASSERT_EQ           [FP-6], [[AP-8]]    
+offset 323:        ASSERT_EQ           [FP-6], [[AP-8]]  # *range_check_ptr = code_len
 offset 324:        PUSH                [FP-6] + -3   
-offset 326:        ASSERT_EQ           [AP-1], [[AP-9]+1]  
-offset 327:        PUSH                [FP+2]        
-offset 328:        PUSH                [AP-4]        
-offset 329:        PUSH                [AP-11] + 2   
-offset 331:        PUSH                [AP-5]        
-offset 332:        PUSH                [FP-5]        
+offset 326:        ASSERT_EQ           [AP-1], [[AP-9]+1] # *(range_check_ptr + 1) = code_len - 3
+offset 327:        PUSH                [FP+2]        # syscall_ptr
+offset 328:        PUSH                [AP-4]        # pedersen_ptr
+offset 329:        PUSH                [AP-11] + 2   # range_check_ptr + 2
+offset 331:        PUSH                [AP-5]        # hash2 result (id_hash)
+offset 332:        PUSH                [FP-5]        # code
 offset 333:        CALL                247                 # __main__._validate
 offset 335:        RET                 
 
