@@ -339,6 +339,64 @@ The description for the stage 2.b files ([`devices/deviceB`](chall/devices/devic
 
 > a digital wallet for which you have the password: seedlocker.py
 
+We're given [`seedlocker.py`](chall/devices/deviceB/seedlocker.py) and [`seed.bin`](chall/devices/deviceB/seed.bin). `seedlocker.py` defines two classes `G` and `E`; `E` is responsible for the password check, and loads a bunch of state out of `seed.bin`.
+
+The password is sent to the `E` instance two bits at a time via `e.set_uint()`. The password is checked as follows:
+
+```python
+password = bytes.fromhex(sys.argv[1])
+e = E()
+
+for b in password:
+    for i in range(4):
+        key = (b >> (i * 2)) & 3
+        e.set_uint(e.key, key)
+        for _ in range(2):
+            e.step()
+
+if e.get_uint(e.good) == 1:
+    ...
+```
+
+The reversing process roughly looks like this:
+
+1. `e.gs` is a list of `G` instances which are referred to by index in `e.get` and `e.set_uint`.
+2. `set_uint` is setting the `value` of several `G` instances in `e.gs`.
+3. `step` basically calls `e.get` on several `G` instances (by index).
+4. `e.get` does a single binary operation from a single `G` depending on that `G`'s type and value.
+5. Those binary operations look like "and", "or", "xor" and "not" with optional inversion of inputs.
+6. This looks like a digital circuit, with each `G` representing a single digital logic gate, and where `step` effectively updates the simulation of the circuit. `dff` (`g.kind == 9`) elements are flip-flops, which are clocked each step.
+
+So, we can infer that the password is fed two bits at a time to two input gates, then processed through a big digital circuit which eventually produces a "1" bit at a specific gate (`e.good`) if the password is accepted. I decided to first try and graph the circuit to create a digital logic diagram. [`seedlocker_graph.py`](files/stage2b/seedlocker_graph.py) generates a Graphviz diagram which can be rendered into a huge graph. Here's a small chunk of the graph (click for the full thing as a PDF):
+
+> [![A very convoluted circuit diagram](files/stage2b/seedlocker_preview.png)](files/stage2b/seedlocker.pdf)
+
+It's not very interpretable, unfortunately. But there's a small circuit off to the right hand side that does look interesting:
+
+> [![A suspicious bit of the circuit diagram](files/stage2b/timingloop.png)](files/stage2b/timingloop.png)
+
+This piece takes only constant inputs, and produces an output in `and_4853` which is fed to the AND gates, ultimately feeding into the `e.good` gate (`and_1940`). If we print out the value of `and_4853` as we step the simulation, we get the following repeating 256-element sequence:
+
+`0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0`
+
+There's a single `1` at step 80, and 0s everywhere else. This tells us that the password is most likely 80 bits long (two steps for every two bits of the password). We can confirm this by printing out the output of `ff_3128_0`, confirming that it goes to 1 after 81 steps and stays there; as its output is inverted to the next AND, any password longer than 80 bits will never validate.
+
+I tried to apply similar logic to understanding the other inputs to the `e.good` gate, printing out their values while varying the password, but was not able to make any headway - the circuit is too convoluted. So, I turned instead to just solving for the password using an SMT solver, Z3.
+
+In brief, all of the gate operations, including the flipflops, can be represented symbolically as operations on (unknown) password bits, resulting in a logical equation that can be solved by a boolean satisifability solver. Although such problems are NP-hard in the general case, most circuits are not that complex, and SMT solvers like Z3 have a lot of tricks to attack such problems.
+
+All we have to do is modify the script to compute gate values symbolically instead of concretely - password inputs are rewritten as Z3 `Bool` variables, and boolean operations are replaced by Z3 operators where appropriate. A relatively straightforward transformation yields the script [`seedlocker_z3.py`](files/stage2b/seedlocker_z3.py), which spits out a password `995b90996f4564409191` after a few minutes!
+
+Trying this password in the original [`seedlocker.py`](chall/devices/deviceB/seedlocker.py) works perfectly, and spits out the following output:
+
+```
+Seed: easy sponsor novel jazz theory marble era hurt transfer ball describe neutral   
+Private key: 0x81e8d3a6ad341da46e6361b7c1c376b5423e7ad04748077b93a0c20263305824
+Public key X: 0x206aeb643e2fe72452ef6929049d09496d7252a87e9daf6bf2e58914b55f3a90
+Public key Y: 0x46c220ee7cbe03b138a76dcb4db673c35e2ab81b4235486fe4dbd2ad093e8df4
+```
+
+We have B's private key! We can finally take this private key to decrypt our stage 2b flag: `SSTIC{f5967cae6478fa6bb9ea1bc758aee0961a68a8b4767f74888ce0bb8563a6218e}`.
 
 ## Stage 2.c
 
@@ -357,9 +415,9 @@ The description for stage 2.d reads:
 
 ## Stage 3
 
-After obtaining all four private keys, I had to implement the MuSig signature scheme, which was thankfully quite easy because most of the pieces are in the [stage2a `musig2_player.py` script](chall/devices/deviceA/musig2_player.py). The only missing bits are the aggregation calculations of $R_j$ and $s$, which can be found in the [MuSig2 paper](https://eprint.iacr.org/2020/1261). My implementation of the signature scheme is in [`musig2_sign.py`](files/stage3/musig2_sign.py).
+After obtaining all four private keys, I had to implement the MuSig signature scheme, which was thankfully quite easy because most of the pieces are in the [stage2a `musig2_player.py` script](chall/devices/deviceA/musig2_player.py). The only missing bits are the aggregation calculations of $R_j$ and $s$, which can be found in the [MuSig2 paper](https://eprint.iacr.org/2020/1261). My implementation of the signature scheme is in [`musig2_sign.py`](files/stage3/musig2_sign.py). Note that it uses a "proper" random nonce, so the result is non-deterministic (though `random.randrange` probably isn't as secure as it could be, so I should use `secrets.randbelow` in the future).
 
-When we visit https://trois-pains-zero.quatre-qu.art/ and click on the "Acheter un JNF" (Buy an NFT) link, we get to https://trois-pains-zero.quatre-qu.art/achat/login and are prompted to sign a message that looks like this: `We hereby authorize an admin session of 5 minutes starting from 2023-04-02 15:10:41.625883+00:00 (nonce: d70e0896b4b54fb58e10679caa05e157).` Punch in the signature generated by `musig2_sign.py` for that message to log in, and we are sent to a second page, https://trois-pains-zero.quatre-qu.art/achat/redeem. Here, we're asked to enter a coupon in order to buy the NFT.
+When we visit https://trois-pains-zero.quatre-qu.art/ and click on the "Acheter un JNF" (Buy an NFT) link, we get to https://trois-pains-zero.quatre-qu.art/achat/login and are prompted to sign a message that looks like this: `We hereby authorize an admin session of 5 minutes starting from 2023-04-02 15:10:41.625883+00:00 (nonce: d70e0896b4b54fb58e10679caa05e157).` Punch in the signature generated by `musig2_sign.py` (`R=(0x7906b3413376ae10f944eb1d0bd8b7f98a96af290937ffa7a06a2fb2bcc5122b,0x1957eb31e027295297476042bf4b038a0c4330c7c18c9535995a1ef529ed3e31)`, `s=0x395294ce77e7023a70d4a49d27fe3f68d87a89dbf02d229b71abb6e496bcb0f1`) for that message to log in, and we are sent to a second page, https://trois-pains-zero.quatre-qu.art/achat/redeem. Here, we're asked to enter a coupon in order to buy the NFT.
 
 Validation for the coupon starts in [`server/achat.py`](chall/backup/server/achat.py), which passes the input parameters to a smart contract:
 
