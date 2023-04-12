@@ -20,7 +20,5 @@ for i in range(25000):
             assert hamming[key[j] ^ mask[j]] == b
         elif b == 0:
             key[j] = masks[i][j]
-        elif b == 8:
-            key[j] = 255 - masks[i][j]
 
 print(bytearray(key).hex())

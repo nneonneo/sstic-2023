@@ -358,7 +358,7 @@ if e.get_uint(e.good) == 1:
     ...
 ```
 
-The reversing process roughly looks like this:
+My thought process for reversing this roughly looked like this:
 
 1. `e.gs` is a list of `G` instances which are referred to by index in `e.get` and `e.set_uint`.
 2. `set_uint` is setting the `value` of several `G` instances in `e.gs`.
@@ -367,7 +367,7 @@ The reversing process roughly looks like this:
 5. Those binary operations look like "and", "or", "xor" and "not" with optional inversion of inputs.
 6. This looks like a digital circuit, with each `G` representing a single digital logic gate, and where `step` effectively updates the simulation of the circuit. `dff` (`g.kind == 9`) elements are flip-flops, which are clocked each step.
 
-So, we can infer that the password is fed two bits at a time to two input gates, then processed through a big digital circuit which eventually produces a "1" bit at a specific gate (`e.good`) if the password is accepted. I decided to first try and graph the circuit to create a digital logic diagram. [`seedlocker_graph.py`](files/stage2b/seedlocker_graph.py) generates a Graphviz diagram which can be rendered into a huge graph. Here's a small chunk of the graph (click for the full thing as a PDF):
+So, we can infer that the password is fed two bits at a time to two input gates (kind 3), then processed through a big digital circuit which eventually produces a "1" bit at a specific gate (`e.good`, gate 1940) if the password is accepted. I decided to first try and graph the circuit to create a digital logic diagram. [`seedlocker_graph.py`](files/stage2b/seedlocker_graph.py) generates a Graphviz diagram which can be rendered into a huge graph. Here's a small chunk of the graph (click for the full thing as a PDF):
 
 > [![A very convoluted circuit diagram](files/stage2b/seedlocker_preview.png)](files/stage2b/seedlocker.pdf)
 
@@ -404,6 +404,11 @@ The description for the stage 2.c files ([`devices/deviceC`](chall/devices/devic
 
 > a physical device, available here device.quatre-qu.art:8080, I think Charly has the password. If you want to test on your own equipment you will find the UI update on the backup server with the libc used. We have set up limitations, one based on proof of work, we have also provided you with the solver script (pow_solver.py) and a password "fudmH/MGzgUM7Zx3k6xMuvThTXh+ULf1". The password is not the one for the equipment but the one for the protection.
 
+### Reversing the Front-End
+
+We're given [`frontend_service.bin`](chall/devices/deviceC/frontend_service.bin), a Linux ARM64 binary, along with the corresponding [`ld.so`](chall/devices/deviceC/ld-linux-aarch64.so.1) and [`libc.so`](chall/devices/deviceC/remote_lib.so.6). We're also provided with a [proof of work solver](chall/devices/deviceC/pow_solver.py).
+
+
 ## Stage 2.d
 
 The description for stage 2.d reads:
@@ -412,6 +417,77 @@ The description for stage 2.d reads:
 > We tried to extract the information by attacking the secure memory with fault injections but without success 😒.
 > For information, secure memory takes a mask as an argument and uses the stored value XORed with the mask. The measurements we made during the experiment are stored in data.h5. It is too large for backup but you can retrieve it at this address: https://trois-pains-zero.quatre-qu.art/data_34718ec031bbb6e094075a0c7da32bc5056a57ff082c206e6b70fcc864df09e9.h5.
 > Maybe you know someone who could help us find the information?
+
+We're provided with a single HDF5 file with the following schema:
+
+- `leakages`: 25000x600 `double`
+- `mask`: 25000x32 `unsigned char`
+- `response`: 25000x4 `unsigned char`
+
+We can infer that the dataset consists of 25000 experimental runs, each of which has a 32-byte mask, 600 leakage measurements, and a 4-byte response. Every `response` in the dataset is `NACK`:
+
+```python
+>>> all(bytearray(r) == b"NACK" for r in f["response"])
+True
+```
+
+so we can safely ignore that array. Each mask entry just looks like 32 random bytes:
+
+```python
+>>> f["mask"][:3]
+array([[ 37, 169, 103, 121,  16,  60, 187, 216, 215,  55,   9, 146, 237,
+         65,  37, 165,  28, 184,  71, 144, 157, 114, 143, 120,   8,   6,
+        104,  14, 112,  62, 157,  76],
+       [190, 189,  64,  16, 222, 224, 139, 233,  51, 116, 113, 193,  90,
+        104,  59, 184,  63, 178, 186, 156,  89, 252, 232, 255, 225,  93,
+        202,  11,  86, 163, 187,  67],
+       [ 57, 142, 247, 219, 252, 155, 132, 170,  83, 254, 123,  54,  40,
+        249,   1, 234, 121, 184,   3, 129, 124,  69,  30, 110,  55, 243,
+         87, 187, 212, 196, 142,  86]], dtype=uint8)
+```
+
+Finally, we have the leakages. Plotting the first 100 leakages with [`plot.py`](files/stage2d/plot.py), we see:
+
+> [![Plot showing the first 100 leakage rows](files/stage2d/plot1.png)](files/stage2d/plot1.png)
+
+This tells us a lot! The signals look like energy usage over time. They are all perfectly aligned, and totally free of noise (gotta love artificial datasets!). In the first part of the signal from about x=50 to x=350 we can see a somewhat random (but highly consistent) signal with one prominent spike, corresponding to the injected "fault". From about x=350 to x=415, we see either zeros or a very consistent pattern of alternating measurements; then from x=420 to x=480 we see this:
+
+> [![Plot showing the first 100 leakage rows, zoomed in on x=415..501](files/stage2d/plot2.png)](files/stage2d/plot2.png)
+
+Many of the runs show zero, but those that don't show a consistent pattern alternating between 0.12 and some value between 0.13 and 0.165. There are exactly 32 peaks in all.
+
+The idea is now clear: the fault injection causes the chip to sometimes perform the intended XOR operation, in which case we see the alternating power draw pattern appear after x=350. The power draw between x=420 and x=480 depends on the result of the XOR calculation.
+
+Here, we can make a guess that the amount of power used will depend on the number of 1 bits set in each byte of the result, where the result is the XOR of the secret key and the mask input. As the "leakage measurements" are completely artificial and free of any noise, this is very easy to do with a [simple script](files/stage2d/solve.py):
+
+```python
+import h5py
+from matplotlib import pyplot as plt
+
+f = h5py.File('data_34718ec031bbb6e094075a0c7da32bc5056a57ff082c206e6b70fcc864df09e9.h5', 'r')
+
+hamming = [sum(int(c) for c in f"{i:b}") for i in range(256)]
+
+leakages = f["leakages"]
+masks = f["mask"]
+key = [None] * 32
+for i in range(25000):
+    mask = masks[i]
+    # gotta love synthetic data
+    bits = leakages[i][421:485:2]
+    if (bits < 0.11).all():
+        continue
+    bits = [int(round(c)) for c in ((bits - 0.13) / 0.005)]
+    for j, b in enumerate(bits):
+        if key[j] is not None:
+            assert hamming[key[j] ^ mask[j]] == b
+        elif b == 0:
+            key[j] = masks[i][j]
+
+print(bytearray(key).hex())
+```
+
+This script simply identifies bytes where the power draw is minimal (equal to 0.13), indicating that zero bits were set in the result, i.e. that the mask byte was equal to the corresponding secret key byte. There are enough runs in the data that this happens at least once in every position. When run, we get D's private key: `54644250491642f996d1c94a4ac8a8dbec66dd0ba66f0271b4e65d5570026a9b`! We can take this key and decrypt the corresponding stage 2d flag: `SSTIC{15fb587e4dc04bbb7abb68fc6651f593d6eb0e4fd84bbfa800c6a66043bda86a}`.
 
 ## Stage 3
 
