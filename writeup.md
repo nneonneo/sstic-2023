@@ -29,7 +29,7 @@ Salud deoc’h!
 Your new Trois Pains Zéro bakery has decided to innovate in order to avoid queues
 and allow you to taste our flagship recipe: the famous quatre-quarts (pound cake).
 From July 1, 2023, you will only need to acquire a Non-Fungible Token (NFT)
-from our collection [on OpenSea](https://testnets.opensea.io/assets/goerli/0x43F99c5517928be62935A1d7714408fae90d1896/1), and present it in store to receive your precious cake.
+from our collection <a href="https://testnets.opensea.io/assets/goerli/0x43F99c5517928be62935A1d7714408fae90d1896/1">on OpenSea</a>, and present it in store to receive your precious cake.
 
 The purchase page will soon be available for all our customers and we hope to see you soon
 at the store.
@@ -219,13 +219,13 @@ MuSig2 is a multiparty signature algorithm. In brief, it allows N users with sep
 
 In this challenge, the author of the email ("A") provides [public keys for all participants](chall/devices/deviceA/baker_pubkey.py), [code for implementing their end](chall/devices/deviceA/musig_player.py) of the MuSig2 protocol (N=4) and [a log of their interactions](chall/devices/deviceA/logs.txt) with the MuSig2 aggregator; the code for the aggregator is not provided and is not needed for this challenge.
 
-Briefly, the MuSig2 algorithm over elliptic curves works in two rounds. Let $G$ be the generator of the curve, $p$ be the order of the curve, $(x_i, X_i)$ be the private/public key pair for each user $i$ and $L$ be the full set of public keys. Let $\mathbf{H}_\mathrm{agg}, \mathbf{H}_\mathrm{non}, \mathbf{H}_\mathrm{sig}$ be hash functions (taking arbitrary inputs and producing numbers in $\mathbb{Z}_p$. Except for the private keys, all of the parameters here are provided to us in [`baker_pubkey.py`](chall/devices/deviceA/baker_pubkey.py) and [`musig2_player.py`](chall/devices/deviceA/musig2_player.py). Let $m$ be the message to be signed.
+Briefly, the MuSig2 algorithm over elliptic curves works in two rounds. Let $G$ be the generator of the curve, $p$ be the order of the curve, $(x_i, X_i)$ be the private/public key pair for each user $i$ and $L$ be the full set of public keys. Let $\mathbf{H}_\mathrm{agg}, \mathbf{H}_\mathrm{non}, \mathbf{H}_\mathrm{sig}$ be hash functions taking arbitrary inputs and producing numbers in $\mathbb{Z}_p$. Except for the private keys, all of the parameters here are provided to us in [`baker_pubkey.py`](chall/devices/deviceA/baker_pubkey.py) and [`musig2_player.py`](chall/devices/deviceA/musig2_player.py). Let $m$ be the message to be signed.
 
 - In the first round, each user $i$ selects $N$ nonce values $r_{i,j}$, and computes $R_{i,j} = r_{i,j} G$. Each user sends their $R_{i,j}$ values to the aggregator.
 - The aggregator takes these $R_{i,j}$ values, computes $R_j = \sum_i R_{i,j}$, and sends the aggregated $R_j$ values to each user.
-- In the second round, each user computes key aggregation coefficients $a_i = \mathbf{H}_\mathrm{agg}(L, X_i)$, the aggregate public key $X = \sum_{i} a_i X_i$ and the values $b = \mathbf{H}_\mathrm{non}(X, (R_1, ..., R_N), m)$, $R = \sum_{j} b^{j-1} R_j$ and $c = \mathbf{H}_\mathrm{sig}(X, R, m)$.
-- Each user $i$ computes an individual signature share $s_i = ca_i x_i + \sum_j r_{i,j} b^{j-1} \mod p$ and sends it to the aggregator.
-- The aggregator finally computes $s = \sum_i s_i \mod p$, and outputs $(R, s)$ as the aggregated signature.
+- In the second round, each user computes several shared values: the key aggregation coefficients $a_i = \mathbf{H}_\mathrm{agg}(L, X_i)$, the aggregate public key $X = \sum_{i} a_i X_i$ and the values $b = \mathbf{H}_\mathrm{non}(X, (R_1, ..., R_N), m)$, $R = \sum_{j} b^{j-1} R_j$ and $c = \mathbf{H}_\mathrm{sig}(X, R, m)$.
+- Each user $i$ computes an individual signature share $s_i = ca_i x_i + \sum_j r_{i,j} b^{j-1} \bmod p$ and sends it to the aggregator.
+- The aggregator finally computes $s = \sum_i s_i \bmod p$, and outputs $(R, s)$ as the aggregated signature.
 
 We're provided with a full log of everything sent to and received from the aggregator for five different signatures, from A's point of view (we do not see the traffic for the other participants).
 
@@ -785,7 +785,7 @@ We find that there are two users, `backendUser` and `frontendUser`, and that we 
 
 ### Reversing the Backend
 
-The backend binary, according to `ps -ef`, is `box-B`, but we do cannot access that binary. Instead, we have [`firmware.bin`](files/stage2c/firmware.bin). Again, it's an ARM64 binary, so I opened it in Ghidra. However, the binary is corrupted: every section aside from `.text` (and `.shstrtab`) is missing! `.rodata`, `.dynamic`, `.dynsym`, `.dynstr` and so on are all gone, and the data is not even in the binary. The program headers are similarly corrupt: only the program header for the text section is intact, while the other program headers all have an offset and size of zero. Ghidra still decompiles the program fine, but references to libc functions are all unresolved, read-only data like strings are missing, and relocations are all unresolved. This makes reversing a lot more difficult.
+The backend binary, according to `ps -ef`, is `box-B`, but we cannot access that binary. Instead, we have [`firmware.bin`](files/stage2c/firmware.bin). Again, it's an ARM64 binary, so I opened it in Ghidra. However, the binary is corrupted: every section aside from `.text` (and `.shstrtab`) is missing! `.rodata`, `.dynamic`, `.dynsym`, `.dynstr` and so on are all gone, and the data is not even in the binary. The program headers are similarly corrupt: only the program header for the text section is intact, while the other program headers all have an offset and size of zero. Ghidra still decompiles the program fine, but references to libc functions are all unresolved, read-only data like strings are missing, and relocations are all unresolved. This makes reversing a lot more difficult.
 
 Luckily, some of the functionality of the front-end was included in the backend, but not actually referenced in the binary: for example, the function at 0x2a90 in the backend corresponds to the `read_msg` function in the front-end (0x33c4), and we can use this correspondence to resolve many libc functions.
 
@@ -944,7 +944,7 @@ First, it's helpful to define a few primitive operations that we can perform by 
 For ease of notation, define the following:
 - $||$: concatenation
 - $\oplus$: XOR
-- $0^{16}$: a zero block
+- $0^{16}$: a block of 16 zero bytes
 - $e(C)$: the raw encryption operation (with the unknown-but-fixed AES key)
 - $d(M)$: the raw decryption operation
 - $E_{IV}(M)$: the CBC encryption operation ($IV$ may be omitted if it is unimportant)
@@ -1078,11 +1078,11 @@ Classic AES-CBC bit-flipping works as follows: if we have an encrypted two-block
 
 The block that we want to bit-flip is the one containing `x30`. However, that block is too far away: there are several blocks in between `msgs[9]` and `jmpbuf.x30` that we do not control.
 
-Because we can call `encrypt` and `decrypt` in any order, and with any (overflowed) length, we can perform *iterated* AES-CBC bit-flipping. The basic AES-CBC bit-flip allows us to bit-flip one block by bit-flipping the previous block. We can bit-flip that previous block by bit-flipping the block before that one, and so on, until we reach a block that we can manipulate directly. Diagrammatically:
+Because we can call `encrypt` and `decrypt` in any order, and with any (overflowed) length, we can perform *iterated* AES-CBC bit-flipping. The basic AES-CBC bit-flip allows us to turn a bit-flip in one block into a bit-flip on the next block. We can bit-flip that first block by bit-flipping the block before it, and so on, until we reach a block that we can manipulate directly. Diagrammatically:
 
 > [![Figure showing the iterated bit-flip process](images/2c_2_bitflip.png)](images/2c_2_bitflip.png)
 
-For simplicity, the diagram simply shows a single $E$ function. However, the action of $E$ actually depends on the previous encrypted block (or IV): $E(Y_n) = e(Y_n \oplus E(Y_{n-1}))$.
+Note that for simplicity, the diagram simply shows a single $E$ function. However, the action of $E$ actually depends on the previous encrypted block (or IV): $E(Y_n) = e(Y_n \oplus E(Y_{n-1}))$.
 
 ### Bit-Flipping `msg_count`
 
@@ -1094,7 +1094,7 @@ To solve this, I employed a two-stage approach to bit-flip the block after `num_
 
 When decrypting everything from `msgs[1]` to the `msg_count`, we will "decrypt" all of the intervening blocks, including the size fields for every subsequent message, so the data payloads for `msgs[2]` through `msgs[5]` must be chosen carefully so that their size fields will still be correct after decryption.
 
-We also have to choose $X$ and $Y$ carefully so that the desired result will appear in the `msg_count` block. Let $M$ be the original `msg_count` block; then we have:
+We also have to choose $X$ and $Y$ so that the desired result will appear in the `msg_count` block. Let $M$ be the original `msg_count` block; then we have:
 
 - $Y = d(M) \oplus M \oplus \Delta$
 - $D(Y) = d(Y) \oplus X = d(M \oplus \Delta) \oplus 0^{16}$
@@ -1243,7 +1243,7 @@ for L in tqdm(SCHEDULE[::-1][1:]):
     decrypt_msg9(L)
 ```
 
-This works! I tried various values of `x30` to see if they will produce anything interesting. 0x1b78, for example, is in the middle of the firmware reading code, and will dump out 256 bytes of the stack. However, there's nothing interesting there, as the stack frame it prints out is `main` (we get some ASLR leaks, but those are not useful to us). 0x1218 is in the middle of the password check, but it also does not work since the `main` stack frame is missing variables that the password check expects to see.
+This works! I tried various values of `x30` to see if they will produce anything interesting. 0x1b78, for example, is in the middle of the firmware reading code, and will dump out 256 bytes of the stack ([`fw_leak.bin`](files/stage2c/fw-leak.bin)). However, there's nothing interesting there, as the stack frame it prints out is from `main` (we get some ASLR leaks, but those are not useful to us as the program crashes immediately afterwards). 0x1218 is in the middle of the password check (right before returning the AES key to the user), but it also does not work since the `main` stack frame is missing variables that the password check needs.
 
 So, we will have to modify `sp` as well in order to move to a different stack frame. Unfortunately, `sp` is in the block right *after* `x30`: if we bit-flip `sp`, `x30` will become garbage!
 
@@ -1251,17 +1251,17 @@ So, we will have to modify `sp` as well in order to move to a different stack fr
 
 What we actually need to do is execute the bit-flip attack *three times*: the first time to flip `sp`, the second time to un-flip everything before `sp` (restoring the "garbage" back to the original values), and the third time to flip `x30`. This gets kind of complicated, but luckily it's easy enough to develop and debug the attack using my emulator ([`aes_test.py`](files/stage2c/aes-test.py)).
 
-We have to find a suitable target location to jump to, as well as a suitable stack adjustment to apply. ROP is not an option because we do not have any viable ASLR leak (all of our leaks entail crashing the program). We control very little of the stack: the 0x133e check password function (at 0x1150) reads 32 bytes of the input onto the stack with `strncpy?`, but this is overwritten by `longjmp`.
-
 Note that XORing the stack pointer with a constant bit-flip mask doesn't necessarily produce a constant stack shift, as the stack pointer is randomized with a granularity of 16 bytes. So, we will have to run the exploit repeatedly and get lucky.
 
-In the end, I found a nice solution: the AES decryption routine at 0x1574 places the AES round keys on the stack, then calls the AES-CBC decryption routine at 0x4480. The CBC decryption routine copies the most recent ciphertext block (which we control) to the stack, giving us 16 bytes of stack control. We can use that 16 bytes to set up a fake stack frame for the firmware reading routine (just enough to put the client fd on the stack), and then use the firmware read at 0x1b78 to dump out the contents of the stack - including the AES round keys. Since the first 16 bytes of the round key structure is the original AES key, this gives us the private key for the win.
+We have to find a suitable target location to jump to, as well as a suitable stack adjustment to apply. ROP is not an option because we do not have any viable ASLR leak (all of our leaks entail crashing the program). We control very little of the stack: the 0x133e check password function (at 0x1150) reads 32 bytes of the input onto the stack with `strncpy?`, but this is overwritten by `longjmp`.
+
+In the end, I found a nice solution: the AES decryption routine at 0x1574 places the AES round keys on the stack (creating a large 0x140-byte stack frame), then calls the AES-CBC decryption routine at 0x4480. This CBC decryption routine copies the most recent ciphertext block (which we control) to the stack, giving us 16 bytes of stack control. We can use that 16 bytes to set up a fake stack frame for the firmware reading routine (just enough to put the client fd on the stack), and then use the firmware read at 0x1b78 to dump out the contents of the stack - including the AES round keys. Since the first 16 bytes of the round key structure is the original AES key, this gives us the private key for the win.
 
 Putting it all together, we have the following attack:
 
-1. Exploit the front-end and execute `cat <&4 >&5 & cat <&5 >&4` to connect the client socket directly to the backend.
+1. Exploit the front-end and execute `system("cat <&4 >&5 & cat <&5 >&4")` via ROP to connect the client socket directly to the backend.
 2. Use iterated AES-CBC bit-flipping to XOR the stack pointer in the `jmpbuf` with 0x1e0, which has a chance of decreasing the stack pointer by 0x1e0.
-3. Use iterated AES-CBC bit-flipping to restore the value of `x30` which was corrupted in the previous step.
+3. Invert the bit-flipping of step 2 to restore the value of `x30` which was corrupted in the previous step.
 4. Use iterated AES-CBC bit-flipping to flip the value of `x30` from `(exe + 0x1e94) ^ guard` to `(exe + 0x1b78) ^ guard`.
 5. Call `decrypt` with a block containing the client fd (4) to establish a fake stack frame.
 6. Send an invalid packet to throw an exception, calling `longjmp`.
@@ -1318,7 +1318,7 @@ Many of the runs show zero, but those that don't show a consistent pattern alter
 
 The idea is now clear: the fault injection causes the chip to sometimes perform the intended XOR operation, in which case we see the alternating power draw pattern appear after x=350. The power draw between x=420 and x=480 depends on the result of the XOR calculation.
 
-Here, we can make a guess that the amount of power used will depend on the number of 1 bits set in each byte of the result, where the result is the XOR of the secret key and the mask input. As the "leakage measurements" are completely artificial and free of any noise, this is very easy to do with a [simple script](files/stage2d/solve.py):
+Here, we can make a guess that the amount of power used will depend on the number of 1 bits set in each byte of the result, where the result is the XOR of the secret key and the mask input. We can therefore recover the key by analyzing the power used for each byte. As the "leakage measurements" are completely artificial and free of any noise, this is fairly straightforward to implement ([`solve.py`](files/stage2d/solve.py)):
 
 ```python
 import h5py
@@ -1446,18 +1446,76 @@ In Starknet, contracts are instances of "classes" which contain various methods.
 In block 0, we see several declare and deploy transactions which are just setting up the blockchain. In block 1, we see a declare transaction from the owner address, which must be from `declare(contract_path)`:
 
 ```python
-GatewayBlock(block_hash=317866964754535706263923812865832811423410116157953196330630931923377413982, parent_block_hash=0, block_number=1, status=<BlockStatus.ACCEPTED_ON_L2: 'ACCEPTED_ON_L2'>, root=0, transactions=[DeclareTransaction(hash=3440807715028016891804779965211962369733847722932724852814236161050082652231, signature=[88564440593701894607622686113046728521206879255368231646118140764699840103, 1863394593932243685906713432119313992970855211084845089406309452755165604582], max_fee=10000000000000000, version=1, class_hash=850987241191385873857281644945472963972949967069463868452254135667905505665, sender_address=2227792261936986457068241964193682344855759612155192788502855599627020634957, nonce=0)], timestamp=1680287345, gas_price=100000000000)
+GatewayBlock(
+    block_hash=317866964754535706263923812865832811423410116157953196330630931923377413982,
+    parent_block_hash=0,
+    block_number=1,
+    status=BlockStatus.ACCEPTED_ON_L2,
+    root=0,
+    transactions=[
+        DeclareTransaction(
+            hash=3440807715028016891804779965211962369733847722932724852814236161050082652231,
+            signature=[
+                88564440593701894607622686113046728521206879255368231646118140764699840103,
+                1863394593932243685906713432119313992970855211084845089406309452755165604582,
+            ],
+            max_fee=10000000000000000,
+            version=1,
+            class_hash=850987241191385873857281644945472963972949967069463868452254135667905505665,
+            sender_address=2227792261936986457068241964193682344855759612155192788502855599627020634957,
+            nonce=0,
+        )
+    ],
+    timestamp=1680287345,
+    gas_price=100000000000,
+)
 ```
 
 This suggests that `class_hash=850987241191385873857281644945472963972949967069463868452254135667905505665` is our validation contract class. In the very next transaction, we see an invoke transaction:
 
 ```python
-GatewayBlock(block_hash=1799568260676998479121015811259037913464816982030411987336407540847698027208, parent_block_hash=317866964754535706263923812865832811423410116157953196330630931923377413982, block_number=2, status=<BlockStatus.ACCEPTED_ON_L2: 'ACCEPTED_ON_L2'>, root=0, transactions=[InvokeTransaction(hash=121199570675411142353603730900706315166332311680999986404439172613254399361, signature=[3549921394086265753849997764874797739628619656917898513407059625568914435990, 782026284205841696856660162831378873992041327653219396756491426159406085101], max_fee=10000000000000000, version=1, contract_address=2227792261936986457068241964193682344855759612155192788502855599627020634957, calldata=[1, 1856023862266384134850882267771223226463012388454055972213556707067276624575, 721734516881566113991739060234943946737358742400686720027155767807930563645, 0, 6, 6, 850987241191385873857281644945472963972949967069463868452254135667905505665, 4919, 0, 2, 2227792261936986457068241964193682344855759612155192788502855599627020634957, 121485921437276981477059375547635758552], entry_point_selector=None, nonce=1)], timestamp=1680287348, gas_price=100000000000)
+GatewayBlock(
+    block_hash=1799568260676998479121015811259037913464816982030411987336407540847698027208,
+    parent_block_hash=317866964754535706263923812865832811423410116157953196330630931923377413982,
+    block_number=2,
+    status=BlockStatus.ACCEPTED_ON_L2,
+    root=0,
+    transactions=[
+        InvokeTransaction(
+            hash=121199570675411142353603730900706315166332311680999986404439172613254399361,
+            signature=[
+                3549921394086265753849997764874797739628619656917898513407059625568914435990,
+                782026284205841696856660162831378873992041327653219396756491426159406085101,
+            ],
+            max_fee=10000000000000000,
+            version=1,
+            contract_address=2227792261936986457068241964193682344855759612155192788502855599627020634957,
+            calldata=[
+                1,
+                1856023862266384134850882267771223226463012388454055972213556707067276624575,
+                721734516881566113991739060234943946737358742400686720027155767807930563645,
+                0,
+                6,
+                6,
+                850987241191385873857281644945472963972949967069463868452254135667905505665,
+                4919,
+                0,
+                2,
+                2227792261936986457068241964193682344855759612155192788502855599627020634957,
+                121485921437276981477059375547635758552,
+            ],
+            entry_point_selector=None,
+            nonce=1,
+        )
+    ],
+    timestamp=1680287348,
+    gas_price=100000000000,
+)
 ```
 
 This invoke transaction will be from deploying the contract. We can see the salt argument (0x1337, or 4919 in decimal), as well as the `OWNER_ADDRESS` argument (2227792261936986457068241964193682344855759612155192788502855599627020634957) and what is presumably the nonce argument (121485921437276981477059375547635758552).
 
-Finally, we can dump the contract code via `CLIENT.get_class_by_hash_sync("850987241191385873857281644945472963972949967069463868452254135667905505665")`. We can use the open-source [Thoth toolkit](https://github.com/FuzzingLabs/thoth) to disassemble and decompile this code back to something more readable ([`program.txt`](files/stage3/program.txt) and [`program.cairo`](files/stage3/program.cairo) respectively).
+Finally, we can dump the contract code via `CLIENT.get_class_by_hash_sync("850987241191385873857281644945472963972949967069463868452254135667905505665")` to get [`program.json`](files/stage3/program.json). We can use the open-source [Thoth toolkit](https://github.com/FuzzingLabs/thoth) to disassemble and decompile this code back to something more readable ([`program.txt`](files/stage3/program.txt) and [`program.cairo`](files/stage3/program.cairo) respectively).
 
 The disassembly for `validate` looks like this:
 
@@ -1718,9 +1776,20 @@ This is a quick summary of the solution; for details, consult the relevant secti
     1. The way the nonce is generated causes the generated $s_1$ value to be a linear function of five unknowns (powers of the private key).
     2. Run [`extract.py`](files/stage2a/extract.py) to extract the linear equations from the provided log file, paste them into [`solve.sage`](files/stage2a/solve.sage), and run that script to get the private key.
 4. [Stage 2b](#stage-2b)
+    1. Use [`seedlocker_graph.py`](files/stage2b/seedlocker_graph.py) and Graphviz to visualize the circuit. Observe that the circuit on the rightmost side implements a timing loop.
+    2. Check the values of gates `and_4853` and `ff_3128` at each step to determine that the password must be 80 steps (80 bits) in length.
+    3. Run [`seedlocker_z3.py`](files/stage2b/seedlocker_z3.py) to obtain a password, `995b90996f4564409191`.
+    4. Run the original [`seedlocker.py`](chall/devices/deviceB/seedlocker.py) to get the private key.
 5. [Stage 2c](#stage-2c)
+    1. Run [`exploit.py`](files/stage2c/exploit.py) to exploit the front-end by overflowing `msgs` and overwriting a `jmp_buf`, then dump the [firmware](files/stage2c/firmware.bin) for the backend.
+    2. Run [`fwexploit2_real.py`](files/stage2c/fwexploit2_real.py) a few times to exploit an overflow in the `encrypt` and `decrypt` functions in the backend to flip certain bits in the backend's `jmp_buf` and use that capability to leak the AES key from the stack.
 6. [Stage 2d](#stage-2d)
+    1. Run [`plot.py`](files/stage2d/plot.py) to plot the `leakages` measurements and focus on a portion where the power usage depends on the value of the secret XOR the mask.
+    2. Run [`solve.py`](files/stage2d/solve.py) to extract the key bytes and form the private key.
 7. [Stage 3](#stage-3)
+    1. Sign a challenge message on https://trois-pains-zero.quatre-qu.art/achat/login using [`musig2_sign.py`](files/stage3/musig2_sign.py).
+    2. Run [`make_coupon.py`](files/stage3/make_coupon.py) to make a new coupon.
+    3. Submit the [generated coupon](files/stage3/coupon.txt) to https://trois-pains-zero.quatre-qu.art/achat/redeem.
 8. [Final Stage](#final-stage)
     1. Download [the CAPTCHA package](chall/stage3/captcha), put the jigsaw pieces into an image editor, and solve the jigsaw.
     2. Read the email address in the resulting image.
@@ -1801,3 +1870,4 @@ Here's an approximate timeline of my solution process, reconstructed via web bro
 
 ## Conclusion
 
+It was a pretty wild ride this year! I liked the parallel design, since it meant that I could work on other parts while blocked. I regret missing the "easy" solution to 2.c, but I am happy I was able to solve it anyway - and I think my technique is kind of neat, despite being rather difficult to apply. I enjoyed the focus on cryptography and a bit of signal processing (2.d), and I would definitely love to have harder signal-related challenges in the future. As usual, I loved the opportunity to learn new things and try out a range of skills and concepts - onwards to next year!
