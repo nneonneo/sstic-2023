@@ -217,7 +217,7 @@ The description for the stage 2.a files ([`devices/deviceA`](chall/devices/devic
 
 MuSig2 is a multiparty signature algorithm. In brief, it allows N users with separate private/public keys to jointly sign a message which can be validated using an aggregated public key. This signature algorithm is the one which is needed in step 3 to log in as an admin.
 
-In this challenge, the author of the email ("A") provides [public keys for all participants](chall/devices/deviceA/baker_pubkey.py), [code for implementing their end](chall/devices/deviceA/musig_player.py) of the MuSig2 protocol (N=4) and [a log of their interactions](chall/devices/deviceA/logs.txt) with the MuSig2 aggregator; the code for the aggregator is not provided and is not needed for this challenge.
+In this challenge, the author of the email ("A") provides [public keys for all participants](chall/devices/deviceA/baker_pubkey.py), [code for implementing their end](chall/devices/deviceA/musig2_player.py) of the MuSig2 protocol (N=4) and [a log of their interactions](chall/devices/deviceA/logs.txt) with the MuSig2 aggregator; the code for the aggregator is not provided and is not needed for this challenge.
 
 Briefly, the MuSig2 algorithm over elliptic curves works in two rounds. Let $G$ be the generator of the curve, $p$ be the order of the curve, $(x_i, X_i)$ be the private/public key pair for each user $i$ and $L$ be the full set of public keys. Let $\mathbf{H}_\mathrm{agg}, \mathbf{H}_\mathrm{non}, \mathbf{H}_\mathrm{sig}$ be hash functions taking arbitrary inputs and producing numbers in $\mathbb{Z}_p$. Except for the private keys, all of the parameters here are provided to us in [`baker_pubkey.py`](chall/devices/deviceA/baker_pubkey.py) and [`musig2_player.py`](chall/devices/deviceA/musig2_player.py). Let $m$ be the message to be signed.
 
@@ -239,7 +239,7 @@ def get_nonce(x,m,i):
     return pow(x*m_int, digest, order)
 ```
 
-The hash function used here is unusual and a bit suspicious. In particular, the exponent is $\mathbf{H}(i)$, where $i$ can only be $1, 2, 3, 4$.
+The nonce calculation used here is unusually simple: it's $(x_i m)^{\mathbf{H}(j)}$ where $j$ can only be $1, 2, 3$ or $4$.
 
 Recall that $s_i = ca_i x_i + \sum_j r_{i,j} b^{j-1} \mod p$ and we can see $s_1$ in our log file. Expanding this using our implementation of `r = get_nonce(...)`, we have $s_1 = ca_1 x_1 + \sum_j (x_1 m) ^ {\mathbf{H}(j)} b^{j-1} \mod p$. In this equation, we know everything except $x_1$, which means that this is actually just a polynomial over $x_1$! Furthermore, since the exponent of $x_1$ is either 1 or $\mathbf{H}(j)$, we can actually treat this as being a linear equation in the five unknowns $x_1$, $x_1 ^ {\mathbf{H}(1)}$, $x_1 ^ {\mathbf{H}(2)}$, $x_1 ^ {\mathbf{H}(3)}$, $x_1 ^ {\mathbf{H}(4)}$. We happen to have five equations, corresponding to the five observed signatures, so we can find $x_1$ by simply solving a linear system of equations in $\mathbb{Z}_p$.
 
@@ -379,7 +379,7 @@ This piece takes only constant inputs, and produces an output in `and_4853` whic
 
 `0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0`
 
-There's a single `1` at step 80, and 0s everywhere else. This tells us that the password is most likely 80 bits long (two steps for every two bits of the password). We can confirm this by printing out the output of `ff_3128_0`, confirming that it goes to 1 after 81 steps and stays there; as its output is inverted to the next AND, any password longer than 80 bits will never validate.
+There's a single `1` at step 80, and 0s everywhere else. This tells us that the password is most likely 80 bits long (two steps for every two bits of the password). We can confirm this by printing out the output of `ff_3128_0`: it goes to 1 after 81 steps and stays there. As its output is inverted to the next AND, any password longer than 80 bits will never validate.
 
 I tried to apply similar logic to understanding the other inputs to the `e.good` gate, printing out their values while varying the password, but was not able to make any headway - the circuit is too convoluted. So, I turned instead to just solving for the password using an SMT solver, Z3.
 
@@ -836,7 +836,7 @@ In "add", the number of stored messages is checked directly, unlike the backend 
 
 ### The Backend Vulnerability
 
-As I found out after finishing the competition, the **intended** solution was that the 0x133e check was using `snprintf` to "copy" the input string to the response packet in the wrong-password case, *using the user input as the format string*, so you could use `%s` and `%x` etc. to leak stuff off the stack, including the AES key. Unfortunately, I **completely missed** this while reversing `firmware.bin` due to the lack of symbols. I had this tagged as `strncpy` as you can see from my decompilation:
+As I found out after finishing the competition, the (apparently) intended solution was that the 0x133e check was using `snprintf` to "copy" the input string to the response packet in the wrong-password case, *using the user input as the format string*, so you could use `%s` and `%x` etc. to leak stuff off the stack, including the AES key. Unfortunately, I **completely missed** this while reversing `firmware.bin` due to the lack of symbols. I had this tagged as `strncpy` as you can see from my decompilation:
 
 ```c
 rpkt->resp = 0;
@@ -942,11 +942,11 @@ First, it's helpful to define a few primitive operations that we can perform by 
 > [![Figure showing the process of CBC decryption](images/CBC_decryption.png)](https://commons.wikimedia.org/wiki/File:CBC_decryption.svg)
 
 For ease of notation, define the following:
-- $||$: concatenation
+- $\mathbin\Vert$: concatenation
 - $\oplus$: XOR
 - $0^{16}$: a block of 16 zero bytes
-- $e(C)$: the raw encryption operation (with the unknown-but-fixed AES key)
-- $d(M)$: the raw decryption operation
+- $e(M)$: the raw encryption operation (with the unknown-but-fixed AES key)
+- $d(C)$: the raw decryption operation
 - $E_{IV}(M)$: the CBC encryption operation ($IV$ may be omitted if it is unimportant)
 - $D_{IV}(C)$: the CBC decryption operation
 
@@ -954,17 +954,17 @@ such that we have $E_{IV}(M) = e(IV \oplus M)$ for a single block $M$, and simil
 
 We can do the following:
 
-1. We can compute $d(C)$ for an arbitrary $C$ by requesting $D_{IV}(0^{16} || C)$ and taking the second block, since the second block will be equal to $d(C) \oplus 0^{16}$.
-2. We can recover the IV by requesting $D_{IV}(0^{16} || 0^{16})$, since the two zero blocks will be decrypted to the same raw "plaintext", but the first block will be XORed with $IV$ and the second will be XORed with $0^{16}$.
-3. During decryption, if we control a block $X$ before a known (but uncontrolled) block $Y$, we can transform $Y$ into a chosen block $Z$ by choosing $X = d(Y) \oplus Z$; this will cause the second block of $D(X||Y)$ to be $Z$.
-4. During *encryption*, if we control *everything* before a known (but uncontrolled) block $Y$, we can transform $Y$ into a chosen block $Z$ as follows:
+1. We can compute $d(C)$ for an arbitrary $C$ by requesting $D_{IV}(0^{16} \mathbin\Vert C)$ and taking the second block, since the second block will be equal to $d(C) \oplus 0^{16}$.
+2. We can recover the IV by requesting $D_{IV}(0^{16} \mathbin\Vert 0^{16})$, since the two zero blocks will be decrypted to the same raw "plaintext", but the first block will be XORed with $IV$ and the second will be XORed with $0^{16}$.
+3. During decryption, if we control a block $X$ before a known (but uncontrolled) block $Y$, we can transform $Y$ into a chosen block $Z$ by choosing $X = d(Y) \oplus Z$; this will cause the second block of $D(X \mathbin\Vert Y)$ to be $Z$.
+4. During encryption, if we control *everything* before a known (but uncontrolled) block $Y$, we can transform $Y$ into a chosen block $Z$ as follows:
     - Obtain $Z_p = d(Z)$.
     - Let $n$ be the number of blocks before $Y$. Choose $n$ blocks $X_1, X_2, ..., X_n$.
-    - Request $E_{IV}(X_1 || X_2 || ... || X_n)$, obtaining $C_1, C_2, ..., C_n$.
+    - Request $E_{IV}(X_1 \mathbin\Vert X_2 \mathbin\Vert ... \mathbin\Vert X_n)$, obtaining $C_1, C_2, ..., C_n$.
     - Set $C'_n = Y \oplus Z_p$ and obtain $X'_n = d(C'_n) \oplus C_{n-1}$.
-    - The "plaintext" will be $X_1 || X_2 || ... || X_{n-1} || X'_n || Y$; when encrypted, the last block will become $Z$.
+    - The "plaintext" will be $X_1 \mathbin\Vert X_2 \mathbin\Vert ... \mathbin\Vert X_{n-1} \mathbin\Vert X'_n \mathbin\Vert Y$; when encrypted, the last block will become $Z$.
 
-Using (3) and (4), we can reliably control the `msg_count` right after `msg[9]`, and also control the size of `msgs[10]`:
+Using (3) and (4), we can reliably control the `msg_count` right after `msgs[9]`, and also control the size of `msgs[10]`:
 
 > [![Figure showing the memory layout of `msgs[9]` and the subsequent `msg_count` block](images/2c_1_mem_9.png)](images/2c_1_mem_9.png)
 
@@ -1072,9 +1072,9 @@ Now that we can control `msg_count`, we can progressively increase the size of t
 
 ### Flipping Bits with AES-CBC
 
-Our goal is to gain control over the `jmpbuf`. While techniques (3) and (4) are helpful for mutating one known block into another, they aren't useful for mutating *unknown* blocks, and in any case we do not directly control the block preceding the `jmpbuf`. We'll turn to another trick: *iterated* AES-CBC bit-flipping.
+Our goal is to gain control over the `jmpbuf`. While techniques (3) and (4) are helpful for mutating one known block into another, they aren't useful for mutating *unknown* blocks: we cannot leak `jmpbuf` as it is too far from `msgs`. In any case, we cannot directly control the block preceding the `jmpbuf`. We'll turn to another trick: *iterated* AES-CBC bit-flipping.
 
-Classic AES-CBC bit-flipping works as follows: if we have an encrypted two-block message $E_{IV}(M_1 || M_2) = C_1 || C_2$ and access to a decryption oracle $D$, then we can selectively flip bits in $M_2$ by XORing the desired difference $\Delta$ into $C_1$: $D_{IV}(C_1 \oplus \Delta || C_2) = d(C_1 \oplus \Delta) \oplus IV || M_2 \oplus \Delta$ (where $M_2 = d(C_2) \oplus C_1$). The first block effectively becomes garbage, but the second block is precisely XORed with the desired difference.
+Classic AES-CBC bit-flipping works as follows: if we have an encrypted two-block message $E_{IV}(M_1 \mathbin\Vert M_2) = C_1 \mathbin\Vert C_2$ and access to the decryption function $D$, then we can selectively flip bits in $M_2$ by XORing the desired difference $\Delta$ into $C_1$: $D_{IV}(C_1 \oplus \Delta \mathbin\Vert C_2) = d(C_1 \oplus \Delta) \oplus IV \mathbin\Vert M_2 \oplus \Delta$ (where $M_2 = d(C_2) \oplus C_1$). The first block effectively becomes garbage, but the second block is precisely XORed with the desired difference.
 
 The block that we want to bit-flip is the one containing `x30`. However, that block is too far away: there are several blocks in between `msgs[9]` and `jmpbuf.x30` that we do not control.
 
@@ -1241,6 +1241,16 @@ munge_272(new_x30 ^ cur_x30)
 
 for L in tqdm(SCHEDULE[::-1][1:]):
     decrypt_msg9(L)
+
+# trigger longjmp
+write_pkt(0x11111)
+print(s.recvn(0x11c).hex())
+while 1:
+    a = s.recvn(4, timeout=5)
+    if not a:
+        log.info("nothing coming; bailing")
+        break
+    print(a.hex())
 ```
 
 This works! I tried various values of `x30` to see if they will produce anything interesting. 0x1b78, for example, is in the middle of the firmware reading code, and will dump out 256 bytes of the stack ([`fw_leak.bin`](files/stage2c/fw-leak.bin)). However, there's nothing interesting there, as the stack frame it prints out is from `main` (we get some ASLR leaks, but those are not useful to us as the program crashes immediately afterwards). 0x1218 is in the middle of the password check (right before returning the AES key to the user), but it also does not work since the `main` stack frame is missing variables that the password check needs.
@@ -1353,7 +1363,7 @@ This script simply identifies bytes where the power draw is minimal (equal to 0.
 
 After obtaining all four private keys, I had to implement the MuSig signature scheme, which was thankfully quite easy because most of the pieces are in the [stage2a `musig2_player.py` script](chall/devices/deviceA/musig2_player.py). The only missing bits are the aggregation calculations of $R_j$ and $s$, which can be found in the [MuSig2 paper](https://eprint.iacr.org/2020/1261). My implementation of the signature scheme is in [`musig2_sign.py`](files/stage3/musig2_sign.py). Note that it uses a "proper" random nonce, so the result is non-deterministic (though `random.randrange` probably isn't as secure as it could be, so I should use `secrets.randbelow` in the future).
 
-When we visit https://trois-pains-zero.quatre-qu.art/ and click on the "Acheter un JNF" (Buy an NFT) link, we get to https://trois-pains-zero.quatre-qu.art/achat/login and are prompted to sign a message that looks like this: `We hereby authorize an admin session of 5 minutes starting from 2023-04-02 15:10:41.625883+00:00 (nonce: d70e0896b4b54fb58e10679caa05e157).` Punch in the signature generated by `musig2_sign.py` (`R=(0x7906b3413376ae10f944eb1d0bd8b7f98a96af290937ffa7a06a2fb2bcc5122b,0x1957eb31e027295297476042bf4b038a0c4330c7c18c9535995a1ef529ed3e31)`, `s=0x395294ce77e7023a70d4a49d27fe3f68d87a89dbf02d229b71abb6e496bcb0f1`) for that message to log in, and we are sent to a second page, https://trois-pains-zero.quatre-qu.art/achat/redeem. Here, we're asked to enter a coupon in order to buy the NFT.
+When we visit https://trois-pains-zero.quatre-qu.art/ and click on the "Acheter un JNF" (Buy an NFT) link, we get to https://trois-pains-zero.quatre-qu.art/admin/login and are prompted to sign a message that looks like this: `We hereby authorize an admin session of 5 minutes starting from 2023-04-02 15:10:41.625883+00:00 (nonce: d70e0896b4b54fb58e10679caa05e157).` Punch in the signature generated by `musig2_sign.py` (`R=(0x7906b3413376ae10f944eb1d0bd8b7f98a96af290937ffa7a06a2fb2bcc5122b,0x1957eb31e027295297476042bf4b038a0c4330c7c18c9535995a1ef529ed3e31)`, `s=0x395294ce77e7023a70d4a49d27fe3f68d87a89dbf02d229b71abb6e496bcb0f1`) for that message to log in, and we are sent to a second page, https://trois-pains-zero.quatre-qu.art/achat/redeem. Here, we're asked to enter a coupon in order to buy the NFT.
 
 Validation for the coupon starts in [`server/achat.py`](chall/backup/server/achat.py), which passes the input parameters to a smart contract:
 
@@ -1692,7 +1702,7 @@ offset 227:        ADD                 AP, 1
 offset 229:        dw <id_hash * code[2]>       
 ```
 
-This tells us that we require `code[0] == id_hash * id_hash`, `0x1336 == code[1] * code[0] * 0x1337` and `code[2] * id_hash == <RET instruction>`. We see that a RET is `0x208b7fff7fff7ffe`, so this leads to the following set of constraints:
+This tells us that we require `code[0] == id_hash * id_hash`, `0x1336 == code[1] * code[0] * 0x1337` and `code[2] * id_hash == <RET instruction>`. We see from `program.json` that a RET is `0x208b7fff7fff7ffe`, so this leads to the following set of constraints:
 
 ```
 code[0] = id_hash * id_hash
@@ -1750,7 +1760,7 @@ After submitting a valid coupon to the server, we're sent to a ["success" page](
 > 
 > This page should not be accessible. If you got here, please contact the head pastry chef on his e-mail address.<br><br>
 > 
-> In order to avoid spam, you must solve a captcha to get the e-mail address: [https://trois-pains-zero.quatre-qu.art/achat/captcha](CAPTCHA)</a>.
+> In order to avoid spam, you must solve a captcha to get the e-mail address: [CAPTCHA](https://trois-pains-zero.quatre-qu.art/achat/captcha)</a>.
 
 Clicking the link will download a tarball containing [24 little images](chall/stage3/captcha):
 
@@ -1771,7 +1781,7 @@ This is a quick summary of the solution; for details, consult the relevant secti
     2. Change the ID in the URI to `id=1` and visit that to get a flag.
 2. [Stage 1](#stage-1)
     1. The website uses an outdated version of ImageMagick to resize PNGs at https://nft.quatre-qu.art/nft-library.php.
-    2. [Exploit CVE-2022-44268](files/stage1/dl_file.py) to exfiltrate the PHP script (containing the flag), then exfiltrate the backup files mentioned in the script.
+    2. [Exploit CVE-2022-44268](files/stage1/dl_file.py) to exfiltrate [the PHP script](chall/stage1/nft-library.php) (containing the flag), then exfiltrate the backup files mentioned in the script.
 3. [Stage 2a](#stage-2a)
     1. The way the nonce is generated causes the generated $s_1$ value to be a linear function of five unknowns (powers of the private key).
     2. Run [`extract.py`](files/stage2a/extract.py) to extract the linear equations from the provided log file, paste them into [`solve.sage`](files/stage2a/solve.sage), and run that script to get the private key.
@@ -1787,7 +1797,7 @@ This is a quick summary of the solution; for details, consult the relevant secti
     1. Run [`plot.py`](files/stage2d/plot.py) to plot the `leakages` measurements and focus on a portion where the power usage depends on the value of the secret XOR the mask.
     2. Run [`solve.py`](files/stage2d/solve.py) to extract the key bytes and form the private key.
 7. [Stage 3](#stage-3)
-    1. Sign a challenge message on https://trois-pains-zero.quatre-qu.art/achat/login using [`musig2_sign.py`](files/stage3/musig2_sign.py).
+    1. Sign a challenge message on https://trois-pains-zero.quatre-qu.art/admin/login using [`musig2_sign.py`](files/stage3/musig2_sign.py).
     2. Run [`make_coupon.py`](files/stage3/make_coupon.py) to make a new coupon.
     3. Submit the [generated coupon](files/stage3/coupon.txt) to https://trois-pains-zero.quatre-qu.art/achat/redeem.
 8. [Final Stage](#final-stage)
