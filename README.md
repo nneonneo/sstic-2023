@@ -1,7 +1,5 @@
 Author: Robert Xiao (@nneonneo)
 
-[__TOC__]
-
 ## Introduction
 
 Another year, another [SSTIC challenge](https://www.sstic.org/2023/challenge/)! It was great fun this year and I was introduced to a lot of new concepts in a short time. This year's challenge featured a more parallel structure, with two short intro challenges leading up to a set of four "key recovery" challenges that could be completed in any order, and culminating in a final blockchain-based reversing challenge. This year was particularly heavy on cryptography, but also featured a bit of web exploitation, quite a bit of reverse engineering, and binary exploitation. As usual, the goal was to recover an email address ending in `@sstic.org` and send an email to complete the challenge. Along the way, flags could be captured and (optionally) submitted to the website to publicly display progress.
